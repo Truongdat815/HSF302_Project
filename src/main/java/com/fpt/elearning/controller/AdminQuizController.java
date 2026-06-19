@@ -43,9 +43,11 @@ public class AdminQuizController {
 
     /** Sinh cau hoi bang AI (Ollama) tu noi dung bai hoc */
     @PostMapping("/lessons/{lessonId}/generate")
-    public String generate(@PathVariable Long lessonId, RedirectAttributes ra) {
+    public String generate(@PathVariable Long lessonId,
+                           @RequestParam(required = false) String instruction,
+                           RedirectAttributes ra) {
         try {
-            int n = quizService.generateForLesson(lessonId);
+            int n = quizService.generateForLesson(lessonId, instruction);
             ra.addFlashAttribute("success", "AI da tao " + n + " cau hoi. Hay kiem tra lai truoc khi xuat ban.");
         } catch (RuntimeException ex) {
             ra.addFlashAttribute("error", ex.getMessage());

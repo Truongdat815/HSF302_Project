@@ -59,7 +59,7 @@ public class QuizService {
 
     // ============ SINH CAU HOI BANG OLLAMA ============
     @Transactional
-    public int generateForLesson(Long lessonId) {
+    public int generateForLesson(Long lessonId, String instruction) {
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new IllegalArgumentException("Khong tim thay bai hoc"));
 
@@ -76,7 +76,7 @@ public class QuizService {
         for (int attempt = 1; attempt <= 3; attempt++) {
             GenChoiceQuiz gen;
             try {
-                gen = objectMapper.readValue(callOllama(plain), GenChoiceQuiz.class);
+                gen = objectMapper.readValue(callOllama(plain, instruction), GenChoiceQuiz.class);
             } catch (Exception ex) {
                 log.warn("Lan {}: khong parse duoc JSON tu Ollama", attempt);
                 continue;
@@ -154,7 +154,7 @@ public class QuizService {
                 .trim();
     }
 
-    private String callOllama(String lessonText) {
+    private String callOllama(String lessonText, String instruction) {
         String system = "Ban la giao vien. Dua CHI tren noi dung bai hoc, tao " + numQuestions
                 + " cau hoi trac nghiem tieng Viet de kiem tra nguoi hoc. "
                 + "Moi cau co dung 4 lua chon, va MOI LUA CHON PHAI LA NOI DUNG DAP AN CU THE - "
@@ -165,6 +165,10 @@ public class QuizService {
                 + "{\"question\":\"Dang qua khu (V2) cua dong tu 'go' la gi?\", "
                 + "\"choices\":[\"went\",\"goed\",\"gone\",\"going\"], \"correctIndex\":0}";
         String user = "NOI DUNG BAI HOC:\n" + lessonText;
+        if (instruction != null && !instruction.isBlank()) {
+            user += "\n\nYEU CAU THEM TU GIANG VIEN (uu tien tuan theo, nhung VAN giu dung quy tac dinh dang o tren): "
+                    + instruction.trim();
+        }
 
         try {
             // JSON Schema ep Ollama tra ve dung cau truc {"questions":[{question,choices,correctIndex}]}

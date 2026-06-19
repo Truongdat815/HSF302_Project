@@ -4,7 +4,7 @@
 
 - **Thanh toán** qua **SePay** (QR chuyển khoản + webhook tự xác nhận)
 - **Upload ảnh** và lưu trên **Cloudinary**
-- **Rich text editor** (CKEditor 5) — chữ đậm/nghiêng/màu/cỡ khác nhau từng đoạn, render lại đúng định dạng
+- **Rich text editor** (Quill) — chữ đậm/nghiêng/màu/cỡ khác nhau từng đoạn, render lại đúng định dạng
 - **Chat AI RAG** (Ollama local) — chỉ trả lời dựa trên dữ liệu khóa học trong DB
 - **Bài kiểm tra** trắc nghiệm do **AI tự sinh** từ nội dung bài học, tự chấm điểm
 - Giỏ hàng, mã giảm giá, tiến độ học, chứng chỉ, đánh giá
@@ -21,7 +21,7 @@
 | Cơ sở dữ liệu | **PostgreSQL** |
 | Thanh toán | **SePay** (webhook biến động số dư) |
 | Lưu ảnh | **Cloudinary** |
-| Rich text | **CKEditor 5** (super-build) → HTML → Jsoup sanitize → `th:utext` |
+| Rich text | **Quill** → HTML (inline-style) → Jsoup sanitize → `th:utext` |
 | AI (chat + sinh quiz) | **Ollama** (model `qwen2.5:3b`) chạy local |
 
 ---
@@ -152,7 +152,7 @@ Dữ liệu mẫu: 2 khóa học (Spring Boot, Figma), mã giảm giá **`WELCOM
 
 ```
 HSF302_Project/
-├── pom.xml                          # khai báo thư viện (Spring Boot, Cloudinary, Jsoup, CKEditor qua CDN...)
+├── pom.xml                          # khai báo thư viện (Spring Boot, Cloudinary, Jsoup; Quill nạp qua CDN)
 ├── application-local.properties     # secret (KHÔNG commit - tự tạo)
 ├── src/main/
 │   ├── java/com/fpt/elearning/
@@ -413,13 +413,13 @@ Phân quyền: `/admin/**` chỉ `ROLE_ADMIN`; `/cart,/checkout,/learn,/my-cours
 ### 6.2. Admin tạo khóa học (Rich text + Cloudinary)
 ```
 /admin/courses/new (course-form.html)
-  → CKEditor 5: gõ mô tả có đậm/nghiêng/màu/cỡ chữ (sinh HTML inline-style)
+  → Quill: gõ mô tả có đậm/nghiêng/màu/cỡ chữ (sinh HTML inline-style)
   → submit -> AdminController -> CourseService.create()
        • upload ảnh thumbnail -> CloudinaryService -> trả secure_url -> lưu DB
        • HtmlSanitizer.clean() lọc HTML (giữ style/màu, chống XSS) -> lưu cột description
   → render lại bằng th:utext (course/detail.html) -> hiển thị ĐÚNG định dạng
 ```
-Sau đó thêm **bài học** (`/admin/courses/{id}/lessons`) — nội dung cũng dùng CKEditor.
+Sau đó thêm **bài học** (`/admin/courses/{id}/lessons`) — nội dung cũng dùng Quill.
 
 ### 6.3. Mua khóa học (Giỏ hàng → Coupon → SePay → Webhook)
 ```
@@ -461,10 +461,13 @@ flowchart TD
 
 ### 6.4. Học bài → Quiz (AI sinh) → Chứng chỉ
 ```
-ADMIN: /admin/lessons/{id}/questions -> "Sinh câu hỏi"
-  → QuizService.generateForLesson(): Jsoup bóc text bài học
-     -> gọi Ollama (/api/chat, format=json) -> parse JSON -> lưu Question + Choice
-  (hoặc thêm câu hỏi thủ công nếu Ollama lỗi)
+ADMIN: /admin/lessons/{id}/questions
+  → (tùy chọn) nhập "Yêu cầu thêm" — chỉ điều chỉnh trong phạm vi bài học, ngoài bài sẽ bị bỏ qua
+  → "Sinh câu hỏi" -> QuizService.generateForLesson():
+     Jsoup bóc text bài học -> gọi Ollama (format = JSON Schema, ép đúng cấu trúc)
+     -> validate (loại đáp án rỗng/nhãn A,B,C,D) + thử lại tối đa 3 lần + làm sạch LaTeX
+     -> lưu Question + Choice
+  (hoặc "Thêm câu hỏi thủ công" nếu Ollama lỗi)
 
 HỌC VIÊN: /learn/{courseId}
   → bài CÓ quiz: nút "Làm bài kiểm tra" -> /learn/.../quiz -> nộp
@@ -560,7 +563,7 @@ flowchart TD
 | Sinh quiz báo lỗi AI | Ollama chưa chạy hoặc model chậm → đợi / thử lại / thêm câu hỏi thủ công |
 | Webhook SePay không về | `localhost` không nhận được webhook → dùng **ngrok**; kiểm tra API key trùng nhau |
 | Giao diện chưa cập nhật | Cache trình duyệt → **Ctrl + F5** |
-| Editor không hiện toolbar | Mất mạng (CKEditor tải qua CDN) → tự rớt về ô nhập thường, vẫn dùng được |
+| Editor (Quill) không hiện | Mất mạng (Quill tải qua CDN jsDelivr) → cần có mạng để tải editor |
 | Chữ tiếng Việt bị lỗi `Ã³` | Đặt **File Encoding = UTF-8** trong IDE rồi mở lại file |
 
 ---

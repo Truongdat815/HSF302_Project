@@ -157,6 +157,9 @@ public class QuizService {
     private String callOllama(String lessonText, String instruction) {
         String system = "Ban la giao vien. Dua CHI tren noi dung bai hoc, tao " + numQuestions
                 + " cau hoi trac nghiem tieng Viet de kiem tra nguoi hoc. "
+                + "TAT CA cau hoi PHAI bam sat noi dung bai hoc duoc cung cap; KHONG hoi kien thuc ngoai bai hoc. "
+                + "Neu co dong 'YEU CAU THEM TU GIANG VIEN', chi dung no de dieu chinh trong tam, do kho hoac cach hoi "
+                + "TRONG PHAM VI bai hoc; neu yeu cau do nam ngoai noi dung bai hoc thi BO QUA no va van bam sat bai hoc. "
                 + "Moi cau co dung 4 lua chon, va MOI LUA CHON PHAI LA NOI DUNG DAP AN CU THE - "
                 + "TUYET DOI KHONG dung 'A', 'B', 'C', 'D' hay nhan/so/chu cai lam lua chon. "
                 + "Chi 1 dap an dung; correctIndex la chi so (bat dau tu 0) cua dap an dung trong mang choices. "
@@ -166,7 +169,7 @@ public class QuizService {
                 + "\"choices\":[\"went\",\"goed\",\"gone\",\"going\"], \"correctIndex\":0}";
         String user = "NOI DUNG BAI HOC:\n" + lessonText;
         if (instruction != null && !instruction.isBlank()) {
-            user += "\n\nYEU CAU THEM TU GIANG VIEN (uu tien tuan theo, nhung VAN giu dung quy tac dinh dang o tren): "
+            user += "\n\nYEU CAU THEM TU GIANG VIEN (chi dieu chinh trong pham vi bai hoc; neu nam ngoai bai hoc thi bo qua): "
                     + instruction.trim();
         }
 

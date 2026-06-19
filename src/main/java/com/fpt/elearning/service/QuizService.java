@@ -71,50 +71,87 @@ public class QuizService {
             plain = plain.substring(0, 4000);
         }
 
-        String generatedJson = callOllama(plain);
-        GenChoiceQuiz gen;
-        try {
-            gen = objectMapper.readValue(generatedJson, GenChoiceQuiz.class);
-        } catch (Exception ex) {
-            log.error("Khong parse duoc JSON tu Ollama: {}", generatedJson, ex);
-            throw new IllegalStateException("AI tra ve du lieu khong hop le, thu lai hoac them cau hoi thu cong.");
+        // Goi AI toi da 3 lan, loai cau co dap an placeholder (A/B/C/D, rong), giu bo tot nhat
+        List<GenQuestion> best = java.util.Collections.emptyList();
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            GenChoiceQuiz gen;
+            try {
+                gen = objectMapper.readValue(callOllama(plain), GenChoiceQuiz.class);
+            } catch (Exception ex) {
+                log.warn("Lan {}: khong parse duoc JSON tu Ollama", attempt);
+                continue;
+            }
+            if (gen == null || gen.questions() == null) {
+                continue;
+            }
+            List<GenQuestion> good = gen.questions().stream().filter(this::isValidQuestion).toList();
+            if (good.size() > best.size()) {
+                best = good;
+            }
+            if (best.size() >= 3) {
+                break; // du dung cho 1 bai kiem tra
+            }
         }
-        if (gen == null || gen.questions() == null || gen.questions().isEmpty()) {
-            throw new IllegalStateException("AI khong tao duoc cau hoi nao, thu lai.");
+        if (best.isEmpty()) {
+            throw new IllegalStateException("AI tao cau hoi chua dat (dap an khong hop le). Thu lai hoac them cau hoi thu cong.");
         }
 
-        // Xoa cau hoi cu (cascade xoa luon dap an)
+        // Xoa cau hoi cu (cascade xoa luon dap an) roi luu bo moi
         questionRepository.deleteAll(questionRepository.findByLesson_IdOrderByIdAsc(lessonId));
 
         int saved = 0;
-        for (GenQuestion gq : gen.questions()) {
-            if (gq.question() == null || gq.choices() == null || gq.choices().size() < 2) {
-                continue;
-            }
+        for (GenQuestion gq : best) {
             int correctIdx = gq.correctIndex() == null ? 0 : gq.correctIndex();
-            Question q = Question.builder().lesson(lesson).content(gq.question().trim()).build();
-            for (int i = 0; i < gq.choices().size(); i++) {
-                String text = gq.choices().get(i);
-                if (text == null || text.isBlank()) continue;
+            Question q = Question.builder().lesson(lesson).content(cleanText(gq.question())).build();
+            List<String> choices = gq.choices();
+            for (int i = 0; i < choices.size(); i++) {
+                String text = cleanText(choices.get(i));
+                if (text.isBlank()) continue;
                 q.getChoices().add(Choice.builder()
-                        .question(q)
-                        .content(text.trim())
-                        .correct(i == correctIdx)
-                        .build());
+                        .question(q).content(text).correct(i == correctIdx).build());
             }
-            // Bao dam co it nhat 1 dap an dung
-            if (q.getChoices().stream().noneMatch(Choice::isCorrect) && !q.getChoices().isEmpty()) {
+            if (q.getChoices().stream().noneMatch(Choice::isCorrect)) {
                 q.getChoices().get(0).setCorrect(true);
             }
-            if (q.getChoices().size() >= 2) {
-                questionRepository.save(q);
-                saved++;
-            }
-        }
-        if (saved == 0) {
-            throw new IllegalStateException("AI khong tao duoc cau hoi hop le, thu lai hoac them thu cong.");
+            questionRepository.save(q);
+            saved++;
         }
         return saved;
+    }
+
+    /** Cau hoi hop le: >=2 lua chon, khong rong, khong phai nhan A/B/C/D, co it nhat 2 lua chon khac nhau */
+    private boolean isValidQuestion(GenQuestion q) {
+        if (q == null || q.question() == null || cleanText(q.question()).isBlank()) {
+            return false;
+        }
+        if (q.choices() == null || q.choices().size() < 2) {
+            return false;
+        }
+        java.util.Set<String> distinct = new java.util.HashSet<>();
+        for (String c : q.choices()) {
+            if (c == null) {
+                return false;
+            }
+            String t = cleanText(c);
+            if (t.isBlank() || t.matches("(?i)^[a-d]$")) {
+                return false; // rong hoac chi la nhan A/B/C/D
+            }
+            distinct.add(t.toLowerCase());
+        }
+        return distinct.size() >= 2;
+    }
+
+    /** Bo LaTeX/markdown ($...$, \command, **...**) khoi text AI sinh ra */
+    private String cleanText(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s.replaceAll("\\\\[a-zA-Z]+\\s*", " ")  // bo \rightarrow, \to ...
+                .replace("$", "")
+                .replace("**", "")
+                .replace("\\", "")
+                .replaceAll("\\s+", " ")
+                .trim();
     }
 
     private String callOllama(String lessonText) {

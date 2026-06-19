@@ -1,13 +1,13 @@
-# 🎓 FPT E-Learning — Nền tảng khóa học online (HSF302)
+# FPT E-Learning — Nền tảng khóa học online (HSF302)
 
 Đồ án môn **HSF302** — website học trực tuyến xây bằng **Java Spring Boot**, demo đầy đủ:
 
-- 💳 **Thanh toán** qua **SePay** (QR chuyển khoản + webhook tự xác nhận)
-- 🖼️ **Upload ảnh** và lưu trên **Cloudinary**
-- ✍️ **Rich text editor** (CKEditor 5) — chữ đậm/nghiêng/màu/cỡ khác nhau từng đoạn, render lại đúng định dạng
-- 🤖 **Chat AI RAG** (Ollama local) — chỉ trả lời dựa trên dữ liệu khóa học trong DB
-- 📝 **Bài kiểm tra** trắc nghiệm do **AI tự sinh** từ nội dung bài học, tự chấm điểm
-- 🛒 Giỏ hàng, mã giảm giá, tiến độ học, chứng chỉ, đánh giá
+- **Thanh toán** qua **SePay** (QR chuyển khoản + webhook tự xác nhận)
+- **Upload ảnh** và lưu trên **Cloudinary**
+- **Rich text editor** (CKEditor 5) — chữ đậm/nghiêng/màu/cỡ khác nhau từng đoạn, render lại đúng định dạng
+- **Chat AI RAG** (Ollama local) — chỉ trả lời dựa trên dữ liệu khóa học trong DB
+- **Bài kiểm tra** trắc nghiệm do **AI tự sinh** từ nội dung bài học, tự chấm điểm
+- Giỏ hàng, mã giảm giá, tiến độ học, chứng chỉ, đánh giá
 
 ---
 
@@ -36,7 +36,7 @@
 | **IDE** | IntelliJ IDEA / Spring Tool Suite / Eclipse | Có Maven tích hợp sẵn (không cần cài Maven riêng). |
 | **(tùy chọn) ngrok** | — | Chỉ cần khi test **webhook SePay** trên máy local. |
 
-> ⚠️ **Encoding**: dự án dùng tiếng Việt UTF-8. Trong IDE hãy đặt **File Encoding = UTF-8** (IntelliJ: Settings → Editor → File Encodings → chọn UTF-8 cho cả 3 mục) để tránh lỗi chữ kiểu `KhÃ³a há»c`.
+>  **Encoding**: dự án dùng tiếng Việt UTF-8. Trong IDE hãy đặt **File Encoding = UTF-8** (IntelliJ: Settings → Editor → File Encodings → chọn UTF-8 cho cả 3 mục) để tránh lỗi chữ kiểu `KhÃ³a há»c`.
 
 ---
 
@@ -90,7 +90,7 @@ Kiểm tra Ollama sống: mở terminal khác chạy `ollama run qwen2.5:3b "Xin
    - **URL**: `https://<domain-public>/api/payments/sepay/webhook`
    - **API Key**: đặt 1 chuỗi bí mật (sẽ điền trùng ở Bước 6).
    - Bật **"Dùng để xác thực thanh toán"**, tắt "Chỉ gửi khi có mã thanh toán".
-3. ⚠️ Webhook là **server→server**, `localhost` SePay không gọi tới được. Khi test local mở tunnel:
+3.  Webhook là **server→server**, `localhost` SePay không gọi tới được. Khi test local mở tunnel:
    ```bash
    ngrok http 8080
    ```
@@ -193,7 +193,7 @@ HSF302_Project/
 
 ---
 
-## 🏗️ Kiến trúc tổng thể
+## Kiến trúc tổng thể
 
 ```mermaid
 flowchart LR
@@ -213,7 +213,7 @@ Luồng chuẩn: **Trình duyệt → Controller → Service → Repository → 
 
 ---
 
-## 📊 Sơ đồ ERD (quan hệ dữ liệu)
+## Sơ đồ ERD (quan hệ dữ liệu)
 
 > Xem trực quan trên GitHub (tự render Mermaid). Nếu xem trong IDE chưa render, cài plugin Mermaid hoặc dán vào https://mermaid.live
 

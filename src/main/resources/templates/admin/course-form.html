@@ -58,7 +58,7 @@
         <div class="mb-4">
             <label class="form-label">Ảnh thumbnail</label>
             <input type="file" name="thumbnail" accept="image/*" class="form-control"/>
-            <div th:if="${course != null and course.thumbnailUrl}" class="mt-3">
+            <div th:if="${course != null and course.thumbnailUrl != null}" class="mt-3">
                 <img th:src="${course.thumbnailUrl}" class="current-thumb" alt="current"/>
                 <small class="text-muted d-block mt-2">Ảnh hiện tại, bỏ trống nếu không đổi.</small>
             </div>

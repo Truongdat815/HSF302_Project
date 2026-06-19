@@ -119,10 +119,14 @@ public class QuizService {
 
     private String callOllama(String lessonText) {
         String system = "Ban la giao vien. Dua CHI tren noi dung bai hoc, tao " + numQuestions
-                + " cau hoi trac nghiem tieng Viet, moi cau 4 lua chon, dung 1 dap an dung. "
-                + "Tra ve DUNG JSON dang: "
-                + "{\"questions\":[{\"question\":\"...\",\"choices\":[\"A\",\"B\",\"C\",\"D\"],\"correctIndex\":0}]}. "
-                + "correctIndex la chi so (bat dau tu 0) cua dap an dung. Khong them chu nao ngoai JSON.";
+                + " cau hoi trac nghiem tieng Viet de kiem tra nguoi hoc. "
+                + "Moi cau co dung 4 lua chon, va MOI LUA CHON PHAI LA NOI DUNG DAP AN CU THE - "
+                + "TUYET DOI KHONG dung 'A', 'B', 'C', 'D' hay nhan/so/chu cai lam lua chon. "
+                + "Chi 1 dap an dung; correctIndex la chi so (bat dau tu 0) cua dap an dung trong mang choices. "
+                + "Viet plain text tieng Viet co dau, KHONG dung LaTeX, markdown hay ky hieu (khong dung \\rightarrow, $...$, **...**). "
+                + "Vi du dung mot cau: "
+                + "{\"question\":\"Dang qua khu (V2) cua dong tu 'go' la gi?\", "
+                + "\"choices\":[\"went\",\"goed\",\"gone\",\"going\"], \"correctIndex\":0}";
         String user = "NOI DUNG BAI HOC:\n" + lessonText;
 
         try {

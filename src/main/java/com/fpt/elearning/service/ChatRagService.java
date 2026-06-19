@@ -1,4 +1,7 @@
 package com.fpt.elearning.service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fpt.elearning.entity.Course;
 import com.fpt.elearning.entity.enums.CourseStatus;
 import com.fpt.elearning.repository.CourseRepository;
@@ -17,16 +20,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Chat AI theo mo hinh RAG (Retrieval-Augmented Generation):
+ * Chat AI theo mô hình RAG (Retrieval-Augmented Generation):
  * 1. RETRIEVAL  - lấy khóa học liên quan từ DB
- * 2. AUGMENT    - ghep du lieu DB vao prompt
- * 3. GENERATION - goi Ollama API tra loi, CHI dua tren du lieu cung cap
+ * 2. AUGMENT    - ghép dữ liệu DB vào prompt
+ * 3. GENERATION - gọi Ollama API trả lời, chỉ dựa trên dữ liệu cung cấp
  */
 @Service
 @RequiredArgsConstructor
 public class ChatRagService {
 
     private static final Logger log = LoggerFactory.getLogger(ChatRagService.class);
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     private final CourseRepository courseRepository;
 
@@ -39,34 +43,25 @@ public class ChatRagService {
     private static final String SYSTEM_PROMPT = """
             Bạn là trợ lý tư vấn khóa học của website E-learning.
             CHỈ trả lời dựa trên DANH SÁCH KHÓA HỌC được cung cấp bên dưới.
-            Nếu không có khóa học phù hợp, hãy trả lời: "Hiện chưa có khóa học phù hợp với yêu cầu của bạn."
+            Nếu DANH SÁCH KHÓA HỌC trống, hãy nói rõ hiện chưa có dữ liệu phù hợp.
             TUYỆT ĐỐI không bịa tên khóa học, giá, hay thông tin nằm ngoài danh sách.
-            Tra loi ngan gon, than thien, bang tieng Viet.
+            Trả lời ngắn gọn, thân thiện, bằng tiếng Việt có dấu.
             """;
 
     public String answer(String question) {
-        // 1. RETRIEVAL: tìm khóa học liên quan (fallback: lấy tất cả PUBLISHED)
+        // Chỉ truy xuất dữ liệu khóa học liên quan trong DB của app.
         List<Course> courses = courseRepository.searchPublished(CourseStatus.PUBLISHED, question);
-        if (courses.isEmpty()) {
-            courses = courseRepository.findByStatus(CourseStatus.PUBLISHED);
-        }
 
         String context = buildContext(courses);
+        String userContent = "DANH SÁCH KHÓA HỌC:\n" + context
+                + "\n\nCÂU HỎI CỦA NGƯỜI DÙNG: " + question;
 
-        // 2. AUGMENT: ghep context + cau hoi
-        String userContent = "DANH SACH KHOA HOC:\n" + context
-                + "\n\nCAU HOI CUA NGUOI DUNG: " + question;
-
-        // 3. GENERATION: goi Ollama API chat
         try {
-            String escapedUserContent = escapeJson(userContent);
-            String escapedSystemPrompt = escapeJson(SYSTEM_PROMPT);
-
             String requestBody = "{"
-                    + "\"model\":\"" + model + "\","
+                    + "\"model\":\"" + escapeJson(model) + "\","
                     + "\"messages\":["
-                    + "  {\"role\":\"system\",\"content\":\"" + escapedSystemPrompt + "\"},"
-                    + "  {\"role\":\"user\",\"content\":\"" + escapedUserContent + "\"}"
+                    + "  {\"role\":\"system\",\"content\":\"" + escapeJson(SYSTEM_PROMPT) + "\"},"
+                    + "  {\"role\":\"user\",\"content\":\"" + escapeJson(userContent) + "\"}"
                     + "],"
                     + "\"stream\":false"
                     + "}";
@@ -84,34 +79,24 @@ public class ChatRagService {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 200) {
-                String body = response.body();
-                // Simple parsing to extract "content" from {"message":{"role":"assistant","content":"..."}}
-                int contentIndex = body.indexOf("\"content\":\"");
-                if (contentIndex != -1) {
-                    int start = contentIndex + 11;
-                    int end = body.indexOf("\"", start);
-                    while (end != -1 && body.charAt(end - 1) == '\\') {
-                        end = body.indexOf("\"", end + 1);
-                    }
-                    if (end != -1) {
-                        String rawContent = body.substring(start, end);
-                        return unescapeJson(rawContent);
-                    }
+                JsonNode content = JSON.readTree(response.body()).path("message").path("content");
+                if (!content.isMissingNode()) {
+                    return content.asText();
                 }
                 return "Lỗi đọc phản hồi từ hệ thống AI.";
-            } else {
-                log.error("Ollama HTTP Error: " + response.statusCode() + ", body: " + response.body());
-                return "Dịch vụ AI tạm thời gặp sự cố.";
             }
+
+            log.error("Ollama HTTP Error: {}, body: {}", response.statusCode(), response.body());
+            return "Dịch vụ AI tạm thời gặp sự cố.";
         } catch (Exception ex) {
-            log.error("Lỗi kết nối Ollama (http://localhost:11434)", ex);
+            log.error("Lỗi kết nối Ollama ({})", ollamaUrl, ex);
             return "Hiện tại trợ lý AI không hoạt động. Vui lòng kiểm tra Ollama.";
         }
     }
 
     private String buildContext(List<Course> courses) {
         if (courses.isEmpty()) {
-            return "(không có khóa học nào)";
+            return "(không có khóa học phù hợp)";
         }
         return courses.stream().map(c -> {
             String instructor = c.getInstructor() != null ? c.getInstructor().getFullName() : "N/A";
@@ -119,13 +104,15 @@ public class ChatRagService {
             return "- Tên: " + c.getTitle()
                     + " | Danh mục: " + category
                     + " | Giá: " + c.getPrice() + " VND"
-                    + " | Giảng vien: " + instructor
+                    + " | Giảng viên: " + instructor
                     + " | Mô tả: " + (c.getShortDescription() != null ? c.getShortDescription() : "");
         }).collect(Collectors.joining("\n"));
     }
 
     private String escapeJson(String input) {
-        if (input == null) return "";
+        if (input == null) {
+            return "";
+        }
         return input.replace("\\", "\\\\")
                 .replace("\"", "\\\"")
                 .replace("\b", "\\b")
@@ -133,14 +120,5 @@ public class ChatRagService {
                 .replace("\n", "\\n")
                 .replace("\r", "\\r")
                 .replace("\t", "\\t");
-    }
-
-    private String unescapeJson(String input) {
-        if (input == null) return "";
-        return input.replace("\\n", "\n")
-                .replace("\\r", "\r")
-                .replace("\\t", "\t")
-                .replace("\\\"", "\"")
-                .replace("\\\\", "\\");
     }
 }

@@ -16,7 +16,8 @@ public class CourseForm {
     // HTML rich text tu CKEditor
     private String description;
     private BigDecimal price;
-    private CourseStatus status = CourseStatus.DRAFT;
+    // Mac dinh PUBLISHED de khoa hoc moi tao hien ngay cho hoc vien
+    private CourseStatus status = CourseStatus.PUBLISHED;
     private Long categoryId;
     // Ảnh thumbnail (co the rong khi sua ma khong doi anh)
     private MultipartFile thumbnail;

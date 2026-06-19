@@ -126,10 +126,26 @@ public class QuizService {
         String user = "NOI DUNG BAI HOC:\n" + lessonText;
 
         try {
+            // JSON Schema ep Ollama tra ve dung cau truc {"questions":[{question,choices,correctIndex}]}
+            Map<String, Object> itemSchema = Map.of(
+                    "type", "object",
+                    "properties", Map.of(
+                            "question", Map.of("type", "string"),
+                            "choices", Map.of("type", "array", "items", Map.of("type", "string")),
+                            "correctIndex", Map.of("type", "integer")
+                    ),
+                    "required", List.of("question", "choices", "correctIndex")
+            );
+            Map<String, Object> schema = Map.of(
+                    "type", "object",
+                    "properties", Map.of("questions", Map.of("type", "array", "items", itemSchema)),
+                    "required", List.of("questions")
+            );
+
             Map<String, Object> body = Map.of(
                     "model", model,
                     "stream", false,
-                    "format", "json",
+                    "format", schema,
                     "messages", List.of(
                             Map.of("role", "system", "content", system),
                             Map.of("role", "user", "content", user)

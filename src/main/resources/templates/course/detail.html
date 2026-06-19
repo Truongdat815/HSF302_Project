@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(${course.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: header}"></nav>
+
+<div class="container py-4">
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/courses}">Khóa học</a></li>
+            <li class="breadcrumb-item active" th:text="${course.title}">Khóa học</li>
+        </ol>
+    </nav>
+
+    <div class="admin-layout">
+        <main>
+            <div class="page-head">
+                <div>
+                    <div class="page-eyebrow">Course detail</div>
+                    <h1 class="page-title" th:text="${course.title}">Tên khóa học</h1>
+                    <p class="page-subtitle" th:text="${course.shortDescription}">Mô tả ngắn</p>
+                </div>
+            </div>
+
+            <p>
+                <span class="badge text-bg-warning">
+                    <i class="bi bi-star-fill"></i>
+                    <span th:text="${#numbers.formatDecimal(avgRating,1,1)}">0.0</span></span>
+                <span class="text-muted small" th:text="'(' + ${#lists.size(reviews)} + ' đánh giá)'">(0)</span>
+            </p>
+
+            <div class="rich-content mb-4" th:utext="${course.description}">Nội dung</div>
+
+            <section class="panel form-card mb-4">
+                <div class="page-eyebrow">Curriculum</div>
+                <h4 class="mb-3">Nội dung khóa học</h4>
+                <div class="lesson-list">
+                    <div class="lesson-link" th:each="l : ${lessons}">
+                        <span th:text="${l.orderIndex} + '. ' + ${l.title}">Bài</span>
+                        <span th:if="${l.preview}" class="badge text-bg-success">Học thử</span>
+                    </div>
+                    <div class="text-muted" th:if="${#lists.isEmpty(lessons)}">Chưa có bài học.</div>
+                </div>
+            </section>
+
+            <section>
+                <div class="section-title">
+                    <div>
+                        <div class="page-eyebrow">Reviews</div>
+                        <h4 class="mb-0">Đánh giá</h4>
+                    </div>
+                </div>
+
+                <div th:if="${enrolled}" class="card mb-3">
+                    <div class="card-body">
+                        <form th:action="@{/reviews}" method="post">
+                            <input type="hidden" name="courseId" th:value="${course.id}"/>
+                            <div class="mb-2">
+                                <label class="form-label">Số sao</label>
+                                <select name="rating" class="form-select rating-select">
+                                    <option value="5">5 sao</option>
+                                    <option value="4">4 sao</option>
+                                    <option value="3">3 sao</option>
+                                    <option value="2">2 sao</option>
+                                    <option value="1">1 sao</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <textarea name="comment" class="form-control" rows="2"
+                                          placeholder="Cảm nhận của bạn..."></textarea>
+                            </div>
+                            <button class="btn btn-sm btn-primary">Gửi đánh giá</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div th:each="r : ${reviews}" class="panel form-card mb-2">
+                    <strong th:text="${r.student.fullName}">Học viên</strong>
+                    <span class="badge text-bg-warning" th:text="${r.rating} + ' sao'">5 sao</span>
+                    <p class="mb-0 text-muted mt-2" th:text="${r.comment}">Comment</p>
+                </div>
+                <p th:if="${#lists.isEmpty(reviews)}" class="text-muted">Chưa có đánh giá nào.</p>
+            </section>
+        </main>
+
+        <aside class="card">
+            <img th:if="${course.thumbnailUrl}" th:src="${course.thumbnailUrl}" class="card-img-top" alt="thumbnail"/>
+            <div th:unless="${course.thumbnailUrl}" class="course-thumb bg-secondary-subtle d-flex align-items-center justify-content-center">
+                <i class="bi bi-image fs-1 text-secondary"></i>
+            </div>
+            <div class="card-body">
+                <div class="page-eyebrow">Enrollment</div>
+                <h3 class="text-danger fw-bold"
+                    th:text="${#numbers.formatDecimal(course.price,0,'COMMA',0,'POINT')} + ' đ'">0 đ</h3>
+                <p class="small text-muted mb-1">Giảng viên:
+                    <span th:text="${course.instructor != null ? course.instructor.fullName : 'N/A'}">GV</span></p>
+                <p class="small text-muted">Danh mục:
+                    <span th:text="${course.category != null ? course.category.name : 'N/A'}">DM</span></p>
+
+                <a th:if="${enrolled}" class="btn btn-success w-100"
+                   th:href="@{/learn/{id}(id=${course.id})}"><i class="bi bi-play-circle"></i> Học ngay</a>
+
+                <form th:if="${!enrolled}" sec:authorize="isAuthenticated()"
+                      th:action="@{/cart/add}" method="post" class="d-grid">
+                    <input type="hidden" name="courseId" th:value="${course.id}"/>
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-cart-plus"></i> Thêm vào giỏ</button>
+                </form>
+
+                <a sec:authorize="isAnonymous()" class="btn btn-primary w-100" th:href="@{/login}">
+                    Đăng nhập để mua</a>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: chatWidget}"></div>
+</body>
+</html>

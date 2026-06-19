@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Học')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: header}"></nav>
+
+<div class="container py-4">
+    <div class="page-head">
+        <div>
+            <div class="page-eyebrow">Learning room</div>
+            <h1 class="page-title" th:text="${course.title}">Khóa học</h1>
+            <p class="page-subtitle">Hoàn thành từng bài học để mở tiến độ và chứng chỉ.</p>
+        </div>
+        <span class="badge text-bg-primary" th:text="${enrollment.progress} + '%'">0%</span>
+    </div>
+
+    <div class="progress mb-4">
+        <div class="progress-bar bg-success" th:style="'width:' + ${enrollment.progress} + '%'"
+             th:text="${enrollment.progress} + '%'">0%</div>
+    </div>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div class="learning-shell">
+        <aside class="panel lesson-sidebar">
+            <div class="page-eyebrow">Lessons</div>
+            <h4 class="mb-3">Danh sách bài học</h4>
+            <div class="lesson-list">
+                <a th:each="l : ${lessons}"
+                   th:href="@{/learn/{cid}(cid=${course.id}, lesson=${l.id})}"
+                   class="lesson-link"
+                   th:classappend="${current != null and current.id == l.id} ? 'active' : ''">
+                    <span th:text="${l.orderIndex} + '. ' + ${l.title}">Bài</span>
+                    <span class="d-inline-flex gap-1">
+                        <i th:if="${quizLessonIds.contains(l.id) and !completedIds.contains(l.id)}"
+                           class="bi bi-patch-question text-warning" title="Có bài kiểm tra"></i>
+                        <i th:if="${completedIds.contains(l.id)}" class="bi bi-check-circle-fill text-success"></i>
+                    </span>
+                </a>
+                <div th:if="${#lists.isEmpty(lessons)}" class="text-muted">Chưa có bài học.</div>
+            </div>
+        </aside>
+
+        <main class="panel lesson-content">
+            <div th:if="${current != null}">
+                <div class="page-eyebrow">Current lesson</div>
+                <h3 th:text="${current.title}">Tiêu đề bài</h3>
+                <div th:if="${current.videoUrl}" class="mb-3">
+                    <a th:href="${current.videoUrl}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-play-btn"></i> Xem video</a>
+                </div>
+                <div class="rich-content" th:utext="${current.content}">Nội dung</div>
+
+                <!-- Bài CÓ bài kiểm tra: phải làm quiz để hoàn thành -->
+                <div th:if="${currentHasQuiz}" class="mt-3 d-flex gap-2 flex-wrap align-items-center">
+                    <a class="btn btn-primary"
+                       th:href="@{/learn/{cid}/lessons/{lid}/quiz(cid=${course.id}, lid=${current.id})}">
+                        <i class="bi bi-pencil-square"></i>
+                        <span th:text="${completedIds.contains(current.id)} ? 'Làm lại bài kiểm tra' : 'Làm bài kiểm tra'">Làm bài kiểm tra</span>
+                    </a>
+                    <span th:if="${completedIds.contains(current.id)}" class="badge text-bg-success">
+                        <i class="bi bi-check-lg"></i> Đã đạt</span>
+                    <span th:unless="${completedIds.contains(current.id)}" class="text-muted small">
+                        Cần làm bài kiểm tra đạt yêu cầu để hoàn thành bài học này.</span>
+                </div>
+
+                <!-- Bài KHÔNG có bài kiểm tra: đánh dấu thủ công -->
+                <form th:unless="${currentHasQuiz}" class="mt-3" method="post"
+                      th:action="@{/learn/{cid}/lessons/{lid}/complete(cid=${course.id}, lid=${current.id})}">
+                    <button class="btn btn-success"
+                            th:disabled="${completedIds.contains(current.id)}">
+                        <i class="bi bi-check2"></i>
+                        <span th:text="${completedIds.contains(current.id)} ? 'Đã hoàn thành' : 'Đánh dấu hoàn thành'">Hoàn thành</span>
+                    </button>
+                </form>
+            </div>
+            <div th:unless="${current != null}" class="text-muted">Khóa học chưa có bài học.</div>
+        </main>
+    </div>
+</div>
+</body>
+</html>

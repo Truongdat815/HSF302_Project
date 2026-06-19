@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Danh mục')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: header}"></nav>
+
+<div class="container py-4 compact-panel">
+    <div class="page-head">
+        <div>
+            <div class="page-eyebrow">Catalog</div>
+            <h1 class="page-title">Quản lý danh mục</h1>
+            <p class="page-subtitle">Sắp xếp khóa học theo các nhóm nội dung để học viên tìm kiếm dễ hơn.</p>
+        </div>
+    </div>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <form th:action="@{/admin/categories}" method="post" class="row g-2 mb-4 form-card panel">
+        <div class="col flex-grow-1"><input class="form-control" name="name" placeholder="Tên danh mục" required/></div>
+        <div class="col-auto"><button class="btn btn-primary">Thêm</button></div>
+    </form>
+
+    <div class="table-wrap">
+        <table class="table">
+            <thead><tr><th>#</th><th>Tên</th><th>Slug</th></tr></thead>
+            <tbody>
+            <tr th:each="cat : ${categories}">
+                <td th:text="${cat.id}">1</td>
+                <td class="fw-bold" th:text="${cat.name}">Tên</td>
+                <td th:text="${cat.slug}">slug</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Bài kiểm tra')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: header}"></nav>
+
+<div class="container py-4 narrow-panel">
+    <div class="page-head">
+        <div>
+            <div class="page-eyebrow">Quiz</div>
+            <h1 class="page-title">Bài kiểm tra</h1>
+            <p class="page-subtitle" th:text="${lesson.title}">Bài học</p>
+        </div>
+        <a class="btn btn-secondary" th:href="@{/learn/{cid}(cid=${courseId}, lesson=${lesson.id})}">Quay lại bài học</a>
+    </div>
+
+    <form th:action="@{/learn/{cid}/lessons/{lid}/quiz(cid=${courseId}, lid=${lesson.id})}" method="post">
+        <div class="panel form-card mb-3" th:each="q, qStat : ${questions}">
+            <h6 class="mb-3"><span th:text="${qStat.count}">1</span>. <span th:text="${q.content}">Câu hỏi?</span></h6>
+            <div class="lesson-list">
+                <label class="lesson-link" th:each="c : ${q.choices}" style="cursor:pointer;">
+                    <span>
+                        <input class="form-check-input me-2" type="radio"
+                               th:name="'q_' + ${q.id}" th:value="${c.id}"/>
+                        <span th:text="${c.content}">Đáp án</span>
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <button class="btn btn-primary btn-lg" type="submit"><i class="bi bi-send-check"></i> Nộp bài</button>
+    </form>
+</div>
+</body>
+</html>

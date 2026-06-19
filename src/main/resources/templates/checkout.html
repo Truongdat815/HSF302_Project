@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Thanh toán')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: header}"></nav>
+
+<div class="container py-4">
+    <div class="page-head">
+        <div>
+            <div class="page-eyebrow">Checkout</div>
+            <h1 class="page-title">Thanh toán</h1>
+            <p class="page-subtitle">Áp dụng mã giảm giá và tạo mã QR SePay để hoàn tất đơn hàng.</p>
+        </div>
+    </div>
+
+    <div th:if="${#lists.isEmpty(cart.items)}" class="alert alert-info">
+        Giỏ hàng trống. <a th:href="@{/courses}">Xem khóa học</a>
+    </div>
+
+    <div class="admin-layout" th:unless="${#lists.isEmpty(cart.items)}">
+        <div>
+            <div class="panel form-card mb-4">
+                <div class="page-eyebrow">Selected courses</div>
+                <div class="lesson-list">
+                    <div class="lesson-link" th:each="item : ${cart.items}">
+                        <span class="fw-bold" th:text="${item.course.title}">Tên</span>
+                        <span th:text="${#numbers.formatDecimal(item.course.price,0,'COMMA',0,'POINT')} + ' đ'">0 đ</span>
+                    </div>
+                </div>
+            </div>
+
+            <form th:action="@{/checkout}" method="get" class="row g-2 panel form-card">
+                <div class="col-auto flex-grow-1">
+                    <label class="form-label">Mã giảm giá</label>
+                    <input class="form-control" name="coupon" th:value="${couponCode}"
+                           placeholder="Nhập mã giảm giá (vd: WELCOME10)"/>
+                </div>
+                <div class="col-auto d-flex align-items-end"><button class="btn btn-outline-primary">Áp dụng</button></div>
+                <div th:if="${couponValid}" class="text-success small mt-2">Mã giảm giá hợp lệ!</div>
+                <div th:if="${couponInvalid}" class="text-danger small mt-2">Mã giảm giá không hợp lệ hoặc hết hạn.</div>
+            </form>
+        </div>
+
+        <aside class="panel form-card">
+            <div class="page-eyebrow">Payment summary</div>
+            <div class="d-flex justify-content-between"><span>Tạm tính:</span>
+                <span th:text="${#numbers.formatDecimal(subtotal,0,'COMMA',0,'POINT')} + ' đ'">0 đ</span></div>
+            <div class="d-flex justify-content-between text-success"><span>Giảm giá:</span>
+                <span th:text="'-' + ${#numbers.formatDecimal(discount,0,'COMMA',0,'POINT')} + ' đ'">0 đ</span></div>
+            <hr/>
+            <div class="d-flex justify-content-between fw-bold fs-5"><span>Tổng:</span>
+                <span class="text-danger" th:text="${#numbers.formatDecimal(total,0,'COMMA',0,'POINT')} + ' đ'">0 đ</span></div>
+
+            <form th:action="@{/checkout/place-order}" method="post" class="mt-3 d-grid">
+                <input type="hidden" name="couponCode" th:value="${couponValid} ? ${couponCode} : ''"/>
+                <button class="btn btn-primary" type="submit">
+                    <i class="bi bi-qr-code"></i> Thanh toán qua SePay
+                </button>
+            </form>
+        </aside>
+    </div>
+</div>
+</body>
+</html>

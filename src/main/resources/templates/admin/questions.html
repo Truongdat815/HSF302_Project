@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Câu hỏi bài học')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: header}"></nav>
+
+<div class="container py-4">
+    <div class="page-head">
+        <div>
+            <div class="page-eyebrow">Quiz builder</div>
+            <h1 class="page-title">Câu hỏi kiểm tra</h1>
+            <p class="page-subtitle" th:text="${lesson.title}">Bài học</p>
+        </div>
+        <a class="btn btn-secondary" th:href="@{/admin/courses/{cid}/lessons(cid=${courseId})}">Quay lại bài học</a>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <!-- Sinh cau hoi bang AI -->
+    <div class="panel form-card mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h5 class="mb-1"><i class="bi bi-stars text-primary"></i> Sinh câu hỏi bằng AI</h5>
+            <p class="text-muted small mb-0">Ollama đọc nội dung bài học và tạo câu hỏi trắc nghiệm. Bộ câu hỏi cũ sẽ bị thay thế.</p>
+        </div>
+        <form th:action="@{/admin/lessons/{id}/generate(id=${lesson.id})}" method="post"
+              onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='Đang sinh...';">
+            <button class="btn btn-primary" type="submit"><i class="bi bi-magic"></i> Sinh câu hỏi</button>
+        </form>
+    </div>
+
+    <!-- Danh sach cau hoi -->
+    <div th:if="${#lists.isEmpty(questions)}" class="alert alert-info">
+        Chưa có câu hỏi. Bấm "Sinh câu hỏi" hoặc thêm thủ công bên dưới.
+    </div>
+
+    <div class="panel form-card mb-3" th:each="q, qStat : ${questions}">
+        <div class="d-flex justify-content-between align-items-start gap-3">
+            <h6 class="mb-2"><span th:text="${qStat.count}">1</span>. <span th:text="${q.content}">Câu hỏi?</span></h6>
+            <form th:action="@{/admin/questions/{id}/delete(id=${q.id})}" method="post">
+                <input type="hidden" name="lessonId" th:value="${lesson.id}"/>
+                <button class="btn btn-sm btn-outline-danger">Xóa</button>
+            </form>
+        </div>
+        <ul class="list-group">
+            <li class="list-group-item d-flex justify-content-between align-items-center" th:each="c : ${q.choices}">
+                <span th:text="${c.content}">Đáp án</span>
+                <span th:if="${c.correct}" class="badge text-bg-success"><i class="bi bi-check-lg"></i> Đúng</span>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Them thu cong -->
+    <div class="panel form-card">
+        <h5 class="mb-3">Thêm câu hỏi thủ công</h5>
+        <form th:action="@{/admin/lessons/{id}/questions(id=${lesson.id})}" method="post">
+            <div class="mb-3">
+                <label class="form-label">Nội dung câu hỏi</label>
+                <input class="form-control" name="content" required/>
+            </div>
+            <p class="form-label">Đáp án (chọn nút radio cho đáp án đúng)</p>
+            <div class="d-flex align-items-center gap-2 mb-2" th:each="i : ${#numbers.sequence(0,3)}">
+                <input class="form-check-input mt-0" type="radio" name="correctIndex" th:value="${i}" th:checked="${i==0}"/>
+                <input class="form-control" name="choice" th:placeholder="'Đáp án ' + (${i}+1)"/>
+            </div>
+            <button class="btn btn-primary mt-2" type="submit">Thêm câu hỏi</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Giỏ hàng')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: header}"></nav>
+
+<div class="container py-4">
+    <div class="page-head">
+        <div>
+            <div class="page-eyebrow">Cart</div>
+            <h1 class="page-title">Giỏ hàng của bạn</h1>
+            <p class="page-subtitle">Kiểm tra các khóa học trước khi thanh toán.</p>
+        </div>
+    </div>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div th:if="${#lists.isEmpty(cart.items)}" class="alert alert-info">
+        Giỏ hàng trống. <a th:href="@{/courses}">Xem khóa học</a>
+    </div>
+
+    <div class="admin-layout" th:unless="${#lists.isEmpty(cart.items)}">
+        <div class="table-wrap">
+            <table class="table align-middle">
+                <thead><tr><th>Khóa học</th><th>Giá</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="item : ${cart.items}">
+                    <td class="fw-bold" th:text="${item.course.title}">Tên</td>
+                    <td th:text="${#numbers.formatDecimal(item.course.price,0,'COMMA',0,'POINT')} + ' đ'">0 đ</td>
+                    <td>
+                        <form th:action="@{/cart/remove}" method="post">
+                            <input type="hidden" name="courseId" th:value="${item.course.id}"/>
+                            <button class="btn btn-sm btn-outline-danger">Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <aside class="panel form-card">
+            <div class="page-eyebrow">Order summary</div>
+            <h4>Tạm tính</h4>
+            <h2 class="text-danger fw-bold"
+                th:text="${#numbers.formatDecimal(subtotal,0,'COMMA',0,'POINT')} + ' đ'">0 đ</h2>
+            <a class="btn btn-primary w-100 mt-2" th:href="@{/checkout}">
+                Thanh toán <i class="bi bi-arrow-right"></i>
+            </a>
+        </aside>
+    </div>
+</div>
+</body>
+</html>

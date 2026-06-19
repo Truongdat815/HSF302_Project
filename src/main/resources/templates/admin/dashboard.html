@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Quản trị')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: header}"></nav>
+
+<div class="container py-4 admin-page">
+    <section class="admin-title-panel mb-4">
+        <div>
+            <div class="page-eyebrow">Admin workspace</div>
+            <h1 class="page-title">Bảng điều khiển</h1>
+            <p class="page-subtitle">Theo dõi nội dung, người dùng, danh mục và mã giảm giá trong một không gian quản trị gọn gàng.</p>
+        </div>
+        <div class="hero-actions">
+            <a class="btn btn-primary" th:href="@{/admin/courses/new}">
+                <i class="bi bi-plus-lg"></i> Tạo khóa học
+            </a>
+            <a class="btn btn-secondary" th:href="@{/admin/courses}">
+                <i class="bi bi-journal-text"></i> Quản lý khóa học
+            </a>
+        </div>
+    </section>
+
+    <div class="metric-grid mb-4">
+        <div class="stat-card stat-blue">
+            <strong th:text="${courseCount}">0</strong>
+            <span>Khóa học</span>
+        </div>
+        <div class="stat-card stat-yellow">
+            <strong th:text="${userCount}">0</strong>
+            <span>Người dùng</span>
+        </div>
+        <div class="stat-card stat-green">
+            <strong th:text="${categoryCount}">0</strong>
+            <span>Danh mục</span>
+        </div>
+        <div class="stat-card stat-cyan">
+            <strong th:text="${couponCount}">0</strong>
+            <span>Mã giảm giá</span>
+        </div>
+    </div>
+
+    <div class="admin-dashboard-grid">
+        <aside class="panel form-card">
+            <div class="page-eyebrow">Quick actions</div>
+            <h4 class="mb-3">Vận hành nhanh</h4>
+            <div class="action-list">
+                <a class="action-item" th:href="@{/admin/courses}">
+                    <span class="action-icon"><i class="bi bi-book"></i></span>
+                    <span class="flex-grow-1">Quản lý khóa học</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+                <a class="action-item" th:href="@{/admin/categories}">
+                    <span class="action-icon"><i class="bi bi-tags"></i></span>
+                    <span class="flex-grow-1">Quản lý danh mục</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+                <a class="action-item" th:href="@{/admin/coupons}">
+                    <span class="action-icon"><i class="bi bi-ticket-perforated"></i></span>
+                    <span class="flex-grow-1">Quản lý mã giảm giá</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </aside>
+        <section class="admin-overview-card">
+            <div>
+                <div class="page-eyebrow">Dashboard</div>
+                <h3>Sẵn sàng quản lý nội dung học tập</h3>
+                <p>Thêm khóa học mới, sắp xếp danh mục và tạo mã ưu đãi từ các tác vụ nhanh bên trái.</p>
+            </div>
+            <div class="admin-hero-badge"><i class="bi bi-bar-chart-line"></i></div>
+        </section>
+    </div>
+</div>
+</body>
+</html>

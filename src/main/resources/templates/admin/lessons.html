@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Bài học')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: header}"></nav>
+
+<div class="container py-4">
+    <div class="page-head">
+        <div>
+            <div class="page-eyebrow">Lesson builder</div>
+            <h1 class="page-title">Bài học</h1>
+            <p class="page-subtitle" th:text="${course.title}">Khóa học</p>
+        </div>
+        <a class="btn btn-secondary" th:href="@{/admin/courses}">Quay lại</a>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <div class="table-wrap mb-4">
+        <table class="table align-middle">
+            <thead><tr><th>Thứ tự</th><th>Tiêu đề</th><th>Học thử</th><th>Thao tác</th></tr></thead>
+            <tbody>
+            <tr th:each="l : ${lessons}">
+                <td th:text="${l.orderIndex}">0</td>
+                <td class="fw-bold" th:text="${l.title}">Bài</td>
+                <td><span th:if="${l.preview}" class="badge text-bg-success">Có</span>
+                    <span th:unless="${l.preview}" class="badge text-bg-secondary">Không</span></td>
+                <td>
+                    <a class="btn btn-sm btn-outline-primary"
+                       th:href="@{/admin/lessons/{id}/questions(id=${l.id})}">
+                        <i class="bi bi-patch-question"></i> Câu hỏi</a>
+                    <form th:action="@{/admin/lessons/{id}/delete(id=${l.id})}" method="post" class="d-inline">
+                        <input type="hidden" name="courseId" th:value="${course.id}"/>
+                        <button class="btn btn-sm btn-outline-danger">Xóa</button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(lessons)}"><td colspan="4" class="text-muted">Chưa có bài học.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="panel form-card">
+        <h4 class="mb-3">Thêm bài học</h4>
+        <form id="lessonForm" th:action="@{/admin/courses/{id}/lessons(id=${course.id})}" method="post">
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <label class="form-label">Tiêu đề</label>
+                    <input class="form-control" name="title" required/>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Thứ tự</label>
+                    <input type="number" class="form-control" name="orderIndex" value="0"/>
+                </div>
+                <div class="col-md-2 mb-3 d-flex align-items-end">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" name="preview" value="true" id="prev"/>
+                        <label class="form-check-label" for="prev">Học thử</label>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Video URL</label>
+                <input class="form-control" name="videoUrl" placeholder="https://..."/>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Nội dung</label>
+                <textarea id="lessonEditor" name="content" class="form-control" rows="6"></textarea>
+                <small class="text-muted">Có thể định dạng cỡ chữ, màu sắc, đậm/nghiêng cho từng đoạn.</small>
+            </div>
+            <button class="btn btn-primary" type="submit">Thêm bài học</button>
+        </form>
+    </div>
+</div>
+
+<!-- CKEditor 5 (super-build) cho noi dung bai hoc -->
+<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/super-build/ckeditor.js"></script>
+<script>
+    const RTE_CONFIG = {
+        toolbar: {
+            items: ['undo', 'redo', '|', 'heading', '|', 'fontSize', 'fontColor', 'fontBackgroundColor',
+                '|', 'bold', 'italic', 'underline', 'strikethrough', '|', 'alignment',
+                '|', 'bulletedList', 'numberedList', '|', 'link', 'blockQuote', '|', 'removeFormat'],
+            shouldNotGroupWhenFull: true
+        },
+        fontSize: { options: [10, 12, 'default', 16, 18, 20, 24, 28, 32], supportAllValues: true },
+        removePlugins: ['Title', 'CKBox', 'CKFinder', 'EasyImage', 'RealTimeCollaborativeComments',
+            'RealTimeCollaborativeTrackChanges', 'RealTimeCollaborativeRevisionHistory',
+            'PresenceList', 'Comments', 'TrackChanges', 'TrackChangesData', 'RevisionHistory',
+            'Pagination', 'WProofreader', 'MathType', 'AIAssistant', 'SlashCommand', 'Template',
+            'DocumentOutline', 'FormatPainter', 'TableOfContents', 'PasteFromOfficeEnhanced']
+    };
+
+    let lessonEditor;
+    CKEDITOR.ClassicEditor.create(document.querySelector('#lessonEditor'), RTE_CONFIG)
+        .then(e => lessonEditor = e)
+        .catch(err => console.error(err));
+
+    document.querySelector('#lessonForm').addEventListener('submit', () => {
+        if (lessonEditor) document.querySelector('#lessonEditor').value = lessonEditor.getData();
+    });
+</script>
+</body>
+</html>

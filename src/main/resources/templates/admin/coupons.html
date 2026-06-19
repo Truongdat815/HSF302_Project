@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Mã giảm giá')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: header}"></nav>
+
+<div class="container py-4">
+    <div class="page-head">
+        <div>
+            <div class="page-eyebrow">Promotion</div>
+            <h1 class="page-title">Quản lý mã giảm giá</h1>
+            <p class="page-subtitle">Tạo coupon theo phần trăm hoặc số tiền cố định để hỗ trợ chiến dịch bán khóa học.</p>
+        </div>
+    </div>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <form th:action="@{/admin/coupons}" method="post" class="row g-3 mb-4 align-items-end form-card panel">
+        <div class="col-md-2"><label class="form-label">Mã</label><input class="form-control" name="code" required/></div>
+        <div class="col-md-2"><label class="form-label">Loại</label>
+            <select class="form-select" name="discountType">
+                <option th:each="t : ${types}" th:value="${t}" th:text="${t}">PERCENT</option>
+            </select></div>
+        <div class="col-md-2"><label class="form-label">Giá trị</label><input type="number" step="0.01" class="form-control" name="value" required/></div>
+        <div class="col-md-2"><label class="form-label">Giới hạn</label><input type="number" class="form-control" name="usageLimit"/></div>
+        <div class="col-md-2"><label class="form-label">Hết hạn</label><input type="date" class="form-control" name="expiryDate"/></div>
+        <div class="col-md-2"><button class="btn btn-primary w-100">Thêm</button></div>
+    </form>
+
+    <div class="table-wrap">
+        <table class="table">
+            <thead><tr><th>Mã</th><th>Loại</th><th>Giá trị</th><th>Đã dùng</th><th>Giới hạn</th><th>Hết hạn</th></tr></thead>
+            <tbody>
+            <tr th:each="c : ${coupons}">
+                <td class="fw-bold" th:text="${c.code}">CODE</td>
+                <td th:text="${c.discountType}">PERCENT</td>
+                <td th:text="${c.value}">10</td>
+                <td th:text="${c.usedCount}">0</td>
+                <td th:text="${c.usageLimit != null ? c.usageLimit : 'Không giới hạn'}">100</td>
+                <td th:text="${c.expiryDate != null ? #temporals.format(c.expiryDate,'dd/MM/yyyy') : '-'}">-</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

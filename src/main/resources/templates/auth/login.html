@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Đăng nhập')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: header}"></nav>
+
+<div class="auth-shell">
+    <div class="auth-card">
+        <div class="page-eyebrow text-center">Welcome back</div>
+        <h3>Đăng nhập</h3>
+
+        <div th:if="${param.error}" class="alert alert-danger">Sai email hoặc mật khẩu.</div>
+        <div th:if="${param.logout}" class="alert alert-success">Bạn đã đăng xuất.</div>
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+        <form th:action="@{/login}" method="post">
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" required autofocus/>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Mật khẩu</label>
+                <input type="password" name="password" class="form-control" required/>
+            </div>
+            <button class="btn btn-primary w-100" type="submit">Đăng nhập</button>
+        </form>
+        <p class="text-center mt-3">Chưa có tài khoản?
+            <a th:href="@{/register}">Đăng ký</a></p>
+    </div>
+</div>
+</body>
+</html>

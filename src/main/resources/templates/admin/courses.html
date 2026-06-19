@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Quản lý khóa học')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: header}"></nav>
+
+<div class="container py-4">
+    <div class="page-head">
+        <div>
+            <div class="page-eyebrow">Course manager</div>
+            <h1 class="page-title">Quản lý khóa học</h1>
+            <p class="page-subtitle">Kiểm soát tiêu đề, danh mục, giá bán, trạng thái xuất bản và nội dung bài học.</p>
+        </div>
+        <a class="btn btn-primary" th:href="@{/admin/courses/new}">
+            <i class="bi bi-plus-lg"></i> Thêm khóa học
+        </a>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div class="table-wrap">
+        <table class="table align-middle">
+            <thead>
+            <tr><th>#</th><th>Tiêu đề</th><th>Danh mục</th><th>Giá</th><th>Trạng thái</th><th>Thao tác</th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="c : ${courses}">
+                <td th:text="${c.id}">1</td>
+                <td class="fw-bold" th:text="${c.title}">Tên</td>
+                <td th:text="${c.category != null ? c.category.name : '-'}">DM</td>
+                <td th:text="${#numbers.formatDecimal(c.price,0,'COMMA',0,'POINT')} + ' đ'">0 đ</td>
+                <td><span class="badge text-bg-secondary" th:text="${c.status}">DRAFT</span></td>
+                <td>
+                    <a class="btn btn-sm btn-outline-primary" th:href="@{/admin/courses/{id}/edit(id=${c.id})}">Sửa</a>
+                    <a class="btn btn-sm btn-outline-info" th:href="@{/admin/courses/{id}/lessons(id=${c.id})}">Bài học</a>
+                    <form class="d-inline" th:action="@{/admin/courses/{id}/delete(id=${c.id})}" method="post">
+                        <button class="btn btn-sm btn-outline-danger" type="submit">Xóa</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

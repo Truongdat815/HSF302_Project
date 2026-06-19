@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Khóa học')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: header}"></nav>
+
+<div class="container py-4 narrow-panel">
+    <div class="page-head">
+        <div>
+            <div class="page-eyebrow">Course editor</div>
+            <h1 class="page-title" th:text="${form.id != null} ? 'Sửa khóa học' : 'Thêm khóa học'">Khóa học</h1>
+            <p class="page-subtitle">Cập nhật thông tin hiển thị, giá bán, danh mục và trạng thái xuất bản.</p>
+        </div>
+        <a class="btn btn-secondary" th:href="@{/admin/courses}">Quay lại</a>
+    </div>
+
+    <form id="courseForm" class="content-panel form-card" th:action="${form.id != null} ? @{/admin/courses/{id}(id=${form.id})} : @{/admin/courses}"
+          method="post" enctype="multipart/form-data" th:object="${form}">
+
+        <div class="mb-3">
+            <label class="form-label">Tiêu đề</label>
+            <input class="form-control" th:field="*{title}" required/>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Mô tả ngắn</label>
+            <input class="form-control" th:field="*{shortDescription}"/>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Mô tả chi tiết</label>
+            <textarea id="editor" class="form-control" th:field="*{description}" rows="8"></textarea>
+            <small class="text-muted">Dùng thanh công cụ để chỉnh cỡ chữ, màu sắc, in đậm/nghiêng cho từng đoạn — định dạng sẽ được lưu và hiển thị lại đúng.</small>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Giá (VND)</label>
+                <input type="number" step="1000" min="0" class="form-control" th:field="*{price}" required/>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Danh mục</label>
+                <select class="form-select" th:field="*{categoryId}">
+                    <option value="">-- Chọn --</option>
+                    <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}">DM</option>
+                </select>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Trạng thái</label>
+                <select class="form-select" th:field="*{status}">
+                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}">DRAFT</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Ảnh thumbnail</label>
+            <input type="file" name="thumbnail" accept="image/*" class="form-control"/>
+            <div th:if="${course != null and course.thumbnailUrl}" class="mt-3">
+                <img th:src="${course.thumbnailUrl}" class="current-thumb" alt="current"/>
+                <small class="text-muted d-block mt-2">Ảnh hiện tại, bỏ trống nếu không đổi.</small>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-primary" type="submit">Lưu khóa học</button>
+            <a class="btn btn-secondary" th:href="@{/admin/courses}">Hủy</a>
+        </div>
+    </form>
+</div>
+
+<!-- CKEditor 5 (super-build): co fontSize, fontColor, bold, italic... -->
+<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/super-build/ckeditor.js"></script>
+<script>
+    const RTE_CONFIG = {
+        toolbar: {
+            items: ['undo', 'redo', '|', 'heading', '|', 'fontSize', 'fontColor', 'fontBackgroundColor',
+                '|', 'bold', 'italic', 'underline', 'strikethrough', '|', 'alignment',
+                '|', 'bulletedList', 'numberedList', '|', 'link', 'blockQuote', '|', 'removeFormat'],
+            shouldNotGroupWhenFull: true
+        },
+        fontSize: { options: [10, 12, 'default', 16, 18, 20, 24, 28, 32], supportAllValues: true },
+        removePlugins: ['Title', 'CKBox', 'CKFinder', 'EasyImage', 'RealTimeCollaborativeComments',
+            'RealTimeCollaborativeTrackChanges', 'RealTimeCollaborativeRevisionHistory',
+            'PresenceList', 'Comments', 'TrackChanges', 'TrackChangesData', 'RevisionHistory',
+            'Pagination', 'WProofreader', 'MathType', 'AIAssistant', 'SlashCommand', 'Template',
+            'DocumentOutline', 'FormatPainter', 'TableOfContents', 'PasteFromOfficeEnhanced']
+    };
+
+    let courseEditor;
+    CKEDITOR.ClassicEditor.create(document.querySelector('#editor'), RTE_CONFIG)
+        .then(e => courseEditor = e)
+        .catch(err => console.error(err));
+
+    // Dong bo noi dung editor ve textarea truoc khi submit
+    document.querySelector('#courseForm').addEventListener('submit', () => {
+        if (courseEditor) document.querySelector('#editor').value = courseEditor.getData();
+    });
+</script>
+</body>
+</html>

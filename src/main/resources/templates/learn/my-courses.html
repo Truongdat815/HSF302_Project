@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Khóa học của tôi')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: header}"></nav>
+
+<div class="container py-4">
+    <section class="student-hero mb-4">
+        <div class="page-eyebrow">Student dashboard</div>
+        <h1 class="page-title">Khóa học của tôi</h1>
+        <p class="mt-3">Theo dõi tiến độ học tập, quay lại bài đang học và nhận chứng chỉ khi hoàn thành.</p>
+    </section>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div th:if="${#lists.isEmpty(enrollments)}" class="alert alert-info">
+        Bạn chưa mua khóa học nào. <a th:href="@{/courses}">Khám phá ngay</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6" th:each="e : ${enrollments}">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                        <div>
+                            <div class="page-eyebrow">In progress</div>
+                            <h5 class="mb-1" th:text="${e.course.title}">Tên khóa học</h5>
+                        </div>
+                        <span class="badge text-bg-primary" th:text="${e.progress} + '%'">0%</span>
+                    </div>
+                    <div class="progress mb-3">
+                        <div class="progress-bar" role="progressbar"
+                             th:style="'width:' + ${e.progress} + '%'"
+                             th:text="${e.progress} + '%'">0%</div>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a class="btn btn-sm btn-primary" th:href="@{/learn/{id}(id=${e.course.id})}">
+                            <i class="bi bi-play-circle"></i> Học tiếp</a>
+                        <a th:if="${e.progress >= 100}" class="btn btn-sm btn-success"
+                           th:href="@{/certificate/{id}(id=${e.id})}">
+                            <i class="bi bi-award"></i> Chứng chỉ</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -101,20 +101,36 @@ public class QuizService {
 
         int saved = 0;
         for (GenQuestion gq : best) {
-            int correctIdx = gq.correctIndex() == null ? 0 : gq.correctIndex();
-            Question q = Question.builder().lesson(lesson).content(cleanText(gq.question())).build();
-            List<String> choices = gq.choices();
-            for (int i = 0; i < choices.size(); i++) {
-                String text = cleanText(choices.get(i));
+            String qContent = cleanText(gq.question());
+            int rawCorrect = gq.correctIndex() == null ? 0 : gq.correctIndex();
+            List<String> raw = gq.choices();
+
+            Question q = Question.builder().lesson(lesson).content(qContent).build();
+            int correctPos = -1;
+            java.util.Set<String> seen = new java.util.HashSet<>();
+            for (int i = 0; i < raw.size(); i++) {
+                String text = cleanText(raw.get(i));
                 if (text.isBlank()) continue;
+                if (text.equalsIgnoreCase(qContent)) continue;        // bo lua chon trung cau hoi
+                if (!seen.add(text.toLowerCase())) continue;          // bo lua chon trung nhau
+                if (i == rawCorrect) {
+                    correctPos = q.getChoices().size();               // vi tri dap an dung sau khi loc
+                }
                 q.getChoices().add(Choice.builder()
-                        .question(q).content(text).correct(i == correctIdx).build());
+                        .question(q).content(text).correct(false).build());
             }
-            if (q.getChoices().stream().noneMatch(Choice::isCorrect)) {
-                q.getChoices().get(0).setCorrect(true);
+            if (q.getChoices().size() < 2) {
+                continue; // bo cau khong du lua chon hop le
             }
+            if (correctPos < 0) {
+                correctPos = 0; // dap an dung bi loc -> mac dinh lua chon dau
+            }
+            q.getChoices().get(correctPos).setCorrect(true);
             questionRepository.save(q);
             saved++;
+        }
+        if (saved == 0) {
+            throw new IllegalStateException("AI tao cau hoi chua dat. Thu lai hoac them cau hoi thu cong.");
         }
         return saved;
     }
@@ -127,28 +143,34 @@ public class QuizService {
         if (q.choices() == null || q.choices().size() < 2) {
             return false;
         }
+        String qc = cleanText(q.question());
         java.util.Set<String> distinct = new java.util.HashSet<>();
         for (String c : q.choices()) {
             if (c == null) {
-                return false;
+                continue;
             }
             String t = cleanText(c);
-            if (t.isBlank() || t.matches("(?i)^[a-d]$")) {
-                return false; // rong hoac chi la nhan A/B/C/D
+            if (t.isBlank() || t.matches("(?i)^[a-d]$") || t.equalsIgnoreCase(qc)) {
+                continue; // bo qua: rong / nhan A,B,C,D / trung cau hoi
             }
             distinct.add(t.toLowerCase());
         }
-        return distinct.size() >= 2;
+        return distinct.size() >= 2; // con it nhat 2 dap an thuc su khac nhau
     }
 
-    /** Bo LaTeX/markdown ($...$, \command, **...**) khoi text AI sinh ra */
+    /** Bo LaTeX/markdown (\textbf{x}, extbf{x} do JSON nuot \t, $...$, **...**) khoi text AI */
     private String cleanText(String s) {
         if (s == null) {
             return "";
         }
-        return s.replaceAll("\\\\[a-zA-Z]+\\s*", " ")  // bo \rightarrow, \to ...
+        return s.replace("\t", " ").replace("\r", " ").replace("\n", " ")
+                // lenh{noi dung} hoac extbf{noi dung} -> giu lai noi dung
+                .replaceAll("(?i)\\\\?[a-z]+\\s*\\{([^{}]*)\\}", "$1")
+                .replaceAll("\\\\[a-zA-Z]+\\s*", " ")  // bo \rightarrow, \to ...
                 .replace("$", "")
                 .replace("**", "")
+                .replace("{", "")
+                .replace("}", "")
                 .replace("\\", "")
                 .replaceAll("\\s+", " ")
                 .trim();
@@ -163,7 +185,9 @@ public class QuizService {
                 + "Moi cau co dung 4 lua chon, va MOI LUA CHON PHAI LA NOI DUNG DAP AN CU THE - "
                 + "TUYET DOI KHONG dung 'A', 'B', 'C', 'D' hay nhan/so/chu cai lam lua chon. "
                 + "Chi 1 dap an dung; correctIndex la chi so (bat dau tu 0) cua dap an dung trong mang choices. "
-                + "Viet plain text tieng Viet co dau, KHONG dung LaTeX, markdown hay ky hieu (khong dung \\rightarrow, $...$, **...**). "
+                + "Viet plain text tieng Viet co dau, KHONG dung LaTeX, markdown hay ky hieu "
+                + "(khong dung \\textbf{}, \\rightarrow, $...$, **...**, dau ngoac nhon). "
+                + "KHONG lap lai noi dung cau hoi trong cac lua chon; moi lua chon la mot phuong an tra loi ngan, khac nhau. "
                 + "Vi du dung mot cau: "
                 + "{\"question\":\"Dang qua khu (V2) cua dong tu 'go' la gi?\", "
                 + "\"choices\":[\"went\",\"goed\",\"gone\",\"going\"], \"correctIndex\":0}";

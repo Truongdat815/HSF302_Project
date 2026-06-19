@@ -177,23 +177,24 @@ public class QuizService {
     }
 
     private String callOllama(String lessonText, String instruction) {
-        String system = "Ban la giao vien. Dua CHI tren noi dung bai hoc, tao " + numQuestions
-                + " cau hoi trac nghiem tieng Viet de kiem tra nguoi hoc. "
-                + "TAT CA cau hoi PHAI bam sat noi dung bai hoc duoc cung cap; KHONG hoi kien thuc ngoai bai hoc. "
-                + "Neu co dong 'YEU CAU THEM TU GIANG VIEN', chi dung no de dieu chinh trong tam, do kho hoac cach hoi "
-                + "TRONG PHAM VI bai hoc; neu yeu cau do nam ngoai noi dung bai hoc thi BO QUA no va van bam sat bai hoc. "
-                + "Moi cau co dung 4 lua chon, va MOI LUA CHON PHAI LA NOI DUNG DAP AN CU THE - "
-                + "TUYET DOI KHONG dung 'A', 'B', 'C', 'D' hay nhan/so/chu cai lam lua chon. "
-                + "Chi 1 dap an dung; correctIndex la chi so (bat dau tu 0) cua dap an dung trong mang choices. "
-                + "Viet plain text tieng Viet co dau, KHONG dung LaTeX, markdown hay ky hieu "
-                + "(khong dung \\textbf{}, \\rightarrow, $...$, **...**, dau ngoac nhon). "
-                + "KHONG lap lai noi dung cau hoi trong cac lua chon; moi lua chon la mot phuong an tra loi ngan, khac nhau. "
-                + "Vi du dung mot cau: "
-                + "{\"question\":\"Dang qua khu (V2) cua dong tu 'go' la gi?\", "
-                + "\"choices\":[\"went\",\"goed\",\"gone\",\"going\"], \"correctIndex\":0}";
-        String user = "NOI DUNG BAI HOC:\n" + lessonText;
+        String system = "Bạn là giáo viên ra đề trắc nghiệm. Chỉ dựa trên NỘI DUNG BÀI HỌC được cung cấp, "
+                + "hãy tạo " + numQuestions + " câu hỏi trắc nghiệm bằng TIẾNG VIỆT CÓ DẤU, rõ nghĩa và đúng ngữ pháp.\n"
+                + "QUY TẮC BẮT BUỘC:\n"
+                + "1) Mỗi câu hỏi rõ ràng, bám sát kiến thức trong bài học; KHÔNG hỏi kiến thức ngoài bài.\n"
+                + "2) Mỗi câu có đúng 4 lựa chọn là các phương án trả lời CỤ THỂ, ngắn gọn và KHÁC NHAU. "
+                + "Không dùng 'A', 'B', 'C', 'D' hay nhãn/số làm lựa chọn. Không lặp lại nội dung câu hỏi trong lựa chọn.\n"
+                + "3) Chỉ MỘT lựa chọn đúng; 'correctIndex' là vị trí (bắt đầu từ 0) của lựa chọn đúng trong mảng 'choices' "
+                + "và phải THẬT SỰ là đáp án đúng về mặt kiến thức.\n"
+                + "4) Viết tiếng Việt có dấu đầy đủ, KHÔNG viết tiếng Việt không dấu. "
+                + "TUYỆT ĐỐI không dùng LaTeX/markdown (\\textbf{}, \\rightarrow, $...$, **, dấu ngoặc nhọn {}).\n"
+                + "5) Nếu có 'YÊU CẦU THÊM TỪ GIẢNG VIÊN', chỉ dùng để điều chỉnh trọng tâm/độ khó trong phạm vi bài học; "
+                + "nếu nằm ngoài bài học thì bỏ qua.\n"
+                + "Ví dụ một câu đúng: "
+                + "{\"question\":\"Dạng quá khứ đơn (V2) của động từ 'go' là gì?\","
+                + "\"choices\":[\"went\",\"goed\",\"gone\",\"going\"],\"correctIndex\":0}";
+        String user = "NỘI DUNG BÀI HỌC:\n" + lessonText;
         if (instruction != null && !instruction.isBlank()) {
-            user += "\n\nYEU CAU THEM TU GIANG VIEN (chi dieu chinh trong pham vi bai hoc; neu nam ngoai bai hoc thi bo qua): "
+            user += "\n\nYÊU CẦU THÊM TỪ GIẢNG VIÊN (chỉ điều chỉnh trong phạm vi bài học; nếu nằm ngoài bài học thì bỏ qua): "
                     + instruction.trim();
         }
 
@@ -218,6 +219,7 @@ public class QuizService {
                     "model", model,
                     "stream", false,
                     "format", schema,
+                    "options", Map.of("temperature", 0.3),
                     "messages", List.of(
                             Map.of("role", "system", "content", system),
                             Map.of("role", "user", "content", user)

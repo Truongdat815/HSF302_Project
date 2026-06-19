@@ -74,9 +74,17 @@ $env:CUDA_VISIBLE_DEVICES = "-1"
 $env:OLLAMA_LLM_LIBRARY  = "cpu"
 & "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe" serve   # giữ cửa sổ này mở
 ```
-Kiểm tra Ollama sống: mở terminal khác chạy `ollama run qwen2.5:3b "Xin chao"`.
+Kiểm tra Ollama sống: mở terminal khác chạy `ollama run qwen2.5:3b "Xin chao"` (in ra câu trả lời là OK).
 
-> Model 3B chạy CPU vẫn ổn (vài giây/câu) — đủ để demo.
+> ⚠️ **Ollama phải đang chạy** mỗi khi dùng **chat AI** và **sinh câu hỏi quiz**. Nếu chạy CPU mode thủ công thì **giữ cửa sổ `serve` mở** suốt buổi demo (đóng là tắt server).
+
+**Cố định CPU mode** (khỏi gõ lại mỗi lần — chạy 1 lần rồi đăng xuất/đăng nhập lại Windows):
+```powershell
+[Environment]::SetEnvironmentVariable("CUDA_VISIBLE_DEVICES","-1","User")
+[Environment]::SetEnvironmentVariable("OLLAMA_LLM_LIBRARY","cpu","User")
+```
+
+> Dùng model **`qwen2.5:3b`** (~2.5GB RAM) vì nhẹ, hợp máy RAM/VRAM thấp. Máy khỏe (RAM trống ≥6GB) có thể đổi sang `qwen2.5:7b` cho câu hỏi tốt hơn: `ollama pull qwen2.5:7b` rồi sửa `ollama.model` trong `application-local.properties`. **Tránh** các model `-coder` (chỉ giỏi code, tiếng Việt kém).
 
 ### Bước 4 — Đăng ký Cloudinary (lưu ảnh)
 1. Tạo tài khoản miễn phí: https://cloudinary.com

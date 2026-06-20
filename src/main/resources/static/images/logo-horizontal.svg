@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 96" role="img" aria-labelledby="title">
+  <title>FPT E-learning</title>
+  <defs>
+    <linearGradient id="markBg" x1="12" y1="8" x2="86" y2="90" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E6FFF"/>
+      <stop offset=".52" stop-color="#13B8E8"/>
+      <stop offset="1" stop-color="#22C55E"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="80" height="80" rx="22" fill="url(#markBg)"/>
+  <path d="M29 35.5 48 25l19 10.5L48 46 29 35.5Z" fill="#fff"/>
+  <path d="M35 42.5v11.8c0 2.2 5.8 7.2 13 7.2s13-5 13-7.2V42.5L48 49.7 35 42.5Z" fill="#EAF6FF"/>
+  <path d="M68 38.2v13.5" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="68" cy="56" r="3.7" fill="#fff"/>
+  <text x="108" y="45" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="900">FPT</text>
+  <text x="108" y="70" fill="#2563EB" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="800">E-learning</text>
+  <path d="M247 28h47c8 0 14 6 14 14v13c0 8-6 14-14 14h-47c-8 0-14-6-14-14V42c0-8 6-14 14-14Z" fill="#EFF6FF"/>
+  <path d="M252 49h31" stroke="#2563EB" stroke-width="5" stroke-linecap="round"/>
+  <path d="M283 49l-9-9m9 9-9 9" stroke="#2563EB" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

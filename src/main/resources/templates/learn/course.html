@@ -43,12 +43,22 @@
 
         <main class="panel lesson-content">
             <div th:if="${current != null}">
-                <div class="page-eyebrow">Current lesson</div>
-                <h3 th:text="${current.title}">Tiêu đề bài</h3>
-                <div th:if="${current.videoUrl}" class="mb-3">
-                    <a th:href="${current.videoUrl}" target="_blank" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-play-btn"></i> Xem video</a>
+                <div class="page-eyebrow">Bài học hiện tại</div>
+                <h3 class="mb-3" th:text="${current.title}">Tiêu đề bài</h3>
+
+                <!-- Video nhúng trực tiếp: YouTube/Vimeo -> iframe; file mp4... -> the <video> -->
+                <div th:if="${videoEmbed != null}" class="video-embed mb-4">
+                    <iframe th:src="${videoEmbed}" title="Video bài học" allowfullscreen
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
                 </div>
+                <div th:if="${videoEmbed == null and videoIsFile}" class="video-embed mb-4">
+                    <video th:src="${current.videoUrl}" controls preload="metadata"></video>
+                </div>
+                <div th:if="${current.videoUrl != null and videoEmbed == null and !videoIsFile}" class="mb-3">
+                    <a th:href="${current.videoUrl}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-box-arrow-up-right"></i> Mở video (link ngoài)</a>
+                </div>
+
                 <div class="rich-content" th:utext="${current.content}">Nội dung</div>
 
                 <!-- Bài CÓ bài kiểm tra: phải làm quiz để hoàn thành -->

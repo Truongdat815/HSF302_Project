@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
+  <title>FPT E-learning</title>
+  <defs>
+    <linearGradient id="bg" x1="12" y1="8" x2="86" y2="90" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E6FFF"/>
+      <stop offset=".52" stop-color="#13B8E8"/>
+      <stop offset="1" stop-color="#22C55E"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#0F172A" flood-opacity=".22"/>
+    </filter>
+  </defs>
+  <rect x="8" y="8" width="80" height="80" rx="22" fill="url(#bg)" filter="url(#shadow)"/>
+  <path d="M29 35.5 48 25l19 10.5L48 46 29 35.5Z" fill="#fff"/>
+  <path d="M35 42.5v11.8c0 2.2 5.8 7.2 13 7.2s13-5 13-7.2V42.5L48 49.7 35 42.5Z" fill="#EAF6FF"/>
+  <path d="M68 38.2v13.5" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="68" cy="56" r="3.7" fill="#fff"/>
+</svg>

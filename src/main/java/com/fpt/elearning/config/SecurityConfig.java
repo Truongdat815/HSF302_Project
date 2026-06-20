@@ -41,9 +41,10 @@ public class SecurityConfig {
                         "/api/payments/sepay/webhook", "/error").permitAll()
                 // Khu vực admin
                 .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
-                // Giỏ hàng, thanh toán, học bài -> cần đăng nhập
+                // Luồng học sinh
                 .requestMatchers("/cart/**", "/checkout/**", "/payment/**",
-                        "/learn/**", "/my-courses/**", "/reviews/**").authenticated()
+                        "/learn/**", "/my-courses/**", "/reviews/**", "/certificate/**")
+                        .hasAuthority("ROLE_STUDENT")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

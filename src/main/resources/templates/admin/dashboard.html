@@ -2,75 +2,123 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('Quản trị')}"></head>
 <body>
-<nav th:replace="~{fragments/layout :: header}"></nav>
+<div class="admin-shell">
+    <input id="adminSidebarToggle" class="admin-sidebar-toggle" type="checkbox"/>
+    <aside th:replace="~{fragments/layout :: adminSidebar('dashboard')}"></aside>
 
-<div class="container py-4 admin-page">
-    <section class="admin-title-panel mb-4">
-        <div>
-            <div class="page-eyebrow">Admin workspace</div>
-            <h1 class="page-title">Bảng điều khiển</h1>
-            <p class="page-subtitle">Theo dõi nội dung, người dùng, danh mục và mã giảm giá trong một không gian quản trị gọn gàng.</p>
-        </div>
-        <div class="hero-actions">
-            <a class="btn btn-primary" th:href="@{/admin/courses/new}">
-                <i class="bi bi-plus-lg"></i> Tạo khóa học
-            </a>
-            <a class="btn btn-secondary" th:href="@{/admin/courses}">
-                <i class="bi bi-journal-text"></i> Quản lý khóa học
-            </a>
-        </div>
-    </section>
-
-    <div class="metric-grid mb-4">
-        <div class="stat-card stat-blue">
-            <strong th:text="${courseCount}">0</strong>
-            <span>Khóa học</span>
-        </div>
-        <div class="stat-card stat-yellow">
-            <strong th:text="${userCount}">0</strong>
-            <span>Người dùng</span>
-        </div>
-        <div class="stat-card stat-green">
-            <strong th:text="${categoryCount}">0</strong>
-            <span>Danh mục</span>
-        </div>
-        <div class="stat-card stat-cyan">
-            <strong th:text="${couponCount}">0</strong>
-            <span>Mã giảm giá</span>
-        </div>
-    </div>
-
-    <div class="admin-dashboard-grid">
-        <aside class="panel form-card">
-            <div class="page-eyebrow">Quick actions</div>
-            <h4 class="mb-3">Vận hành nhanh</h4>
-            <div class="action-list">
-                <a class="action-item" th:href="@{/admin/courses}">
-                    <span class="action-icon"><i class="bi bi-book"></i></span>
-                    <span class="flex-grow-1">Quản lý khóa học</span>
-                    <i class="bi bi-arrow-right"></i>
-                </a>
-                <a class="action-item" th:href="@{/admin/categories}">
-                    <span class="action-icon"><i class="bi bi-tags"></i></span>
-                    <span class="flex-grow-1">Quản lý danh mục</span>
-                    <i class="bi bi-arrow-right"></i>
-                </a>
-                <a class="action-item" th:href="@{/admin/coupons}">
-                    <span class="action-icon"><i class="bi bi-ticket-perforated"></i></span>
-                    <span class="flex-grow-1">Quản lý mã giảm giá</span>
-                    <i class="bi bi-arrow-right"></i>
-                </a>
+    <main class="admin-main admin-dashboard-main">
+        <div class="admin-main-inner dashboard-fit">
+            <div class="admin-topline">
+                <div>
+                    <div class="page-eyebrow">Admin dashboard</div>
+                    <h1 class="page-title">Bảng điều khiển</h1>
+                    <p class="page-subtitle">Theo dõi doanh thu, tiến độ học và chứng chỉ của học sinh từ dữ liệu thật trong hệ thống.</p>
+                </div>
             </div>
-        </aside>
-        <section class="admin-overview-card">
-            <div>
-                <div class="page-eyebrow">Dashboard</div>
-                <h3>Sẵn sàng quản lý nội dung học tập</h3>
-                <p>Thêm khóa học mới, sắp xếp danh mục và tạo mã ưu đãi từ các tác vụ nhanh bên trái.</p>
+
+            <div class="metric-grid dashboard-metrics">
+                <div class="stat-card stat-blue">
+                    <strong th:text="${#numbers.formatDecimal(weekRevenue,0,'COMMA',0,'POINT')}">0</strong>
+                    <span>Doanh thu tuần này</span>
+                </div>
+                <div class="stat-card stat-yellow">
+                    <strong th:text="${#numbers.formatDecimal(monthRevenue,0,'COMMA',0,'POINT')}">0</strong>
+                    <span>Doanh thu tháng này</span>
+                </div>
+                <div class="stat-card stat-green">
+                    <strong th:text="${#numbers.formatDecimal(totalRevenue,0,'COMMA',0,'POINT')}">0</strong>
+                    <span>Tổng doanh thu</span>
+                </div>
+                <div class="stat-card stat-cyan">
+                    <strong th:text="${paidOrderCount}">0</strong>
+                    <span>Đơn đã thanh toán</span>
+                </div>
             </div>
-            <div class="admin-hero-badge"><i class="bi bi-bar-chart-line"></i></div>
-        </section>
-    </div>
+
+            <div class="dashboard-chart-grid">
+                <section class="panel form-card">
+                    <div class="page-eyebrow">Cash flow</div>
+                    <h4 class="mb-3">Doanh thu 7 ngày gần nhất</h4>
+                    <div class="admin-bar-chart">
+                        <div class="bar-row" th:each="p : ${weeklyRevenue}">
+                            <span class="bar-label" th:text="${p.label()}">19/6</span>
+                            <div class="bar-track">
+                                <span class="bar-fill" th:style="'width:' + ${p.percent()} + '%'"></span>
+                            </div>
+                            <strong th:text="${#numbers.formatDecimal(p.amount(),0,'COMMA',0,'POINT')}">0</strong>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel form-card">
+                    <div class="page-eyebrow">Monthly</div>
+                    <h4 class="mb-3">Doanh thu 6 tháng</h4>
+                    <div class="admin-column-chart">
+                        <div class="column-item" th:each="p : ${monthlyRevenue}">
+                            <div class="column-track">
+                                <span class="column-fill" th:style="'height:' + ${p.percent()} + '%'"></span>
+                            </div>
+                            <small th:text="${p.label()}">6/2026</small>
+                            <strong th:text="${#numbers.formatDecimal(p.amount(),0,'COMMA',0,'POINT')}">0</strong>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="dashboard-data-grid">
+                <section class="panel form-card">
+                    <div class="page-eyebrow">Learning activity</div>
+                    <h4 class="mb-3">Học sinh đang học</h4>
+                    <div th:if="${#lists.isEmpty(activeLearners)}" class="text-muted">Chưa có học sinh đang học.</div>
+                    <div class="data-list" th:each="e : ${activeLearners}">
+                        <div>
+                            <strong th:text="${e.student.fullName}">Học sinh</strong>
+                            <small th:text="${e.course.title}">Khóa học</small>
+                        </div>
+                        <span class="progress-pill" th:text="${e.progress} + '%'">40%</span>
+                    </div>
+                </section>
+
+                <section class="panel form-card">
+                    <div class="page-eyebrow">Registered</div>
+                    <h4 class="mb-3">Đã đăng ký nhưng chưa học</h4>
+                    <div th:if="${#lists.isEmpty(notStartedLearners)}" class="text-muted">Không có học sinh chờ bắt đầu.</div>
+                    <div class="data-list" th:each="e : ${notStartedLearners}">
+                        <div>
+                            <strong th:text="${e.student.fullName}">Học sinh</strong>
+                            <small th:text="${e.course.title}">Khóa học</small>
+                        </div>
+                        <span class="badge text-bg-warning">0%</span>
+                    </div>
+                </section>
+                <section class="panel form-card">
+                    <div class="page-eyebrow">Certificates</div>
+                    <h4 class="mb-3">Học sinh đã có chứng chỉ</h4>
+                    <div th:if="${#lists.isEmpty(certificates)}" class="text-muted">Chưa có chứng chỉ nào.</div>
+                    <div class="data-list" th:each="c : ${certificates}">
+                        <div>
+                            <strong th:text="${c.enrollment.student.fullName}">Học sinh</strong>
+                            <small th:text="${c.enrollment.course.title}">Khóa học</small>
+                        </div>
+                        <span class="badge text-bg-success" th:text="${#temporals.format(c.issuedAt,'dd/MM/yyyy')}">19/06/2026</span>
+                    </div>
+                </section>
+
+                <section class="panel form-card">
+                    <div class="page-eyebrow">Recent payments</div>
+                    <h4 class="mb-3">Dòng tiền gần đây</h4>
+                    <div th:if="${#lists.isEmpty(recentPaidOrders)}" class="text-muted">Chưa có giao dịch đã thanh toán.</div>
+                    <div class="data-list" th:each="o : ${recentPaidOrders}">
+                        <div>
+                            <strong th:text="${o.user.fullName}">Học sinh</strong>
+                            <small th:text="${#temporals.format(o.createdAt,'dd/MM/yyyy HH:mm')}">19/06/2026</small>
+                        </div>
+                        <span class="money-pill" th:text="${#numbers.formatDecimal(o.totalAmount,0,'COMMA',0,'POINT')} + ' đ'">0 đ</span>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
 </div>
 </body>
 </html>

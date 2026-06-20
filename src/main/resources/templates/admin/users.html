@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Quản lý học sinh')}"></head>
+<body>
+<div class="admin-shell">
+    <input id="adminSidebarToggle" class="admin-sidebar-toggle" type="checkbox"/>
+    <aside th:replace="~{fragments/layout :: adminSidebar('users')}"></aside>
+
+    <main class="admin-main">
+        <div class="admin-main-inner">
+            <div class="admin-topline">
+                <div>
+                    <div class="page-eyebrow">Students</div>
+                    <h1 class="page-title">Quản lý học sinh</h1>
+                    <p class="page-subtitle">Theo dõi tài khoản, email, vai trò và trạng thái hoạt động của người dùng trong hệ thống.</p>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table class="table align-middle">
+                    <thead>
+                    <tr><th>#</th><th>Họ tên</th><th>Email</th><th>Vai trò</th><th>Trạng thái</th><th>Ngày tạo</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="u : ${users}">
+                        <td th:text="${u.id}">1</td>
+                        <td class="fw-bold" th:text="${u.fullName}">Học sinh</td>
+                        <td th:text="${u.email}">student@fpt.edu.vn</td>
+                        <td>
+                            <span class="badge text-bg-light me-1" th:each="r : ${u.roles}" th:text="${r.name}">ROLE_STUDENT</span>
+                        </td>
+                        <td>
+                            <span th:if="${u.enabled}" class="badge text-bg-success">Đang hoạt động</span>
+                            <span th:unless="${u.enabled}" class="badge text-bg-secondary">Đã khóa</span>
+                        </td>
+                        <td th:text="${u.createdAt != null ? #temporals.format(u.createdAt,'dd/MM/yyyy') : '-'}">-</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

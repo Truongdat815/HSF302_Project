@@ -74,6 +74,12 @@ public class LearnController {
         model.addAttribute("quizLessonIds", quizLessonIds);
         model.addAttribute("current", current);
         model.addAttribute("currentHasQuiz", current != null && quizLessonIds.contains(current.getId()));
+
+        // Nhung video: YouTube/Vimeo -> iframe; file mp4... -> the <video>
+        String videoUrl = current != null ? current.getVideoUrl() : null;
+        String videoEmbed = com.fpt.elearning.util.VideoUtil.toEmbedUrl(videoUrl);
+        model.addAttribute("videoEmbed", videoEmbed);
+        model.addAttribute("videoIsFile", videoEmbed == null && com.fpt.elearning.util.VideoUtil.isDirectVideo(videoUrl));
         return "learn/course";
     }
 

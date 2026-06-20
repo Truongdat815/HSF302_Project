@@ -2,79 +2,100 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('Bài học')}"></head>
 <body>
-<nav th:replace="~{fragments/layout :: header}"></nav>
+<div class="admin-shell">
+    <input id="adminSidebarToggle" class="admin-sidebar-toggle" type="checkbox"/>
+    <aside th:replace="~{fragments/layout :: adminSidebar('courses')}"></aside>
 
-<div class="container py-4">
-    <div class="page-head">
-        <div>
-            <div class="page-eyebrow">Lesson builder</div>
-            <h1 class="page-title">Bài học</h1>
-            <p class="page-subtitle" th:text="${course.title}">Khóa học</p>
-        </div>
-        <a class="btn btn-secondary" th:href="@{/admin/courses}">Quay lại</a>
-    </div>
-
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-
-    <div class="table-wrap mb-4">
-        <table class="table align-middle">
-            <thead><tr><th>Thứ tự</th><th>Tiêu đề</th><th>Học thử</th><th>Thao tác</th></tr></thead>
-            <tbody>
-            <tr th:each="l : ${lessons}">
-                <td th:text="${l.orderIndex}">0</td>
-                <td class="fw-bold" th:text="${l.title}">Bài</td>
-                <td><span th:if="${l.preview}" class="badge text-bg-success">Có</span>
-                    <span th:unless="${l.preview}" class="badge text-bg-secondary">Không</span></td>
-                <td>
-                    <a class="btn btn-sm btn-outline-primary"
-                       th:href="@{/admin/lessons/{id}/questions(id=${l.id})}">
-                        <i class="bi bi-patch-question"></i> Câu hỏi</a>
-                    <form th:action="@{/admin/lessons/{id}/delete(id=${l.id})}" method="post" class="d-inline">
-                        <input type="hidden" name="courseId" th:value="${course.id}"/>
-                        <button class="btn btn-sm btn-outline-danger">Xóa</button>
-                    </form>
-                </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(lessons)}"><td colspan="4" class="text-muted">Chưa có bài học.</td></tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="panel form-card">
-        <h4 class="mb-3">Thêm bài học</h4>
-        <form id="lessonForm" th:action="@{/admin/courses/{id}/lessons(id=${course.id})}" method="post">
-            <div class="row">
-                <div class="col-md-8 mb-3">
-                    <label class="form-label">Tiêu đề</label>
-                    <input class="form-control" name="title" required/>
+    <main class="admin-main">
+        <div class="admin-main-inner">
+            <div class="admin-topline">
+                <div>
+                    <div class="page-eyebrow">Lesson builder</div>
+                    <h1 class="page-title">Bài học</h1>
+                    <p class="page-subtitle" th:text="${course.title}">Khóa học</p>
                 </div>
-                <div class="col-md-2 mb-3">
-                    <label class="form-label">Thứ tự</label>
-                    <input type="number" class="form-control" name="orderIndex" value="0"/>
+                <div class="admin-topline-actions">
+                    <a class="btn btn-secondary" th:href="@{/admin/courses}">Quay lại</a>
                 </div>
-                <div class="col-md-2 mb-3 d-flex align-items-end">
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" name="preview" value="true" id="prev"/>
-                        <label class="form-check-label" for="prev">Học thử</label>
+            </div>
+
+            <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+            <div class="table-wrap mb-4">
+                <table class="table align-middle">
+                    <thead><tr><th>Thứ tự</th><th>Tiêu đề</th><th>Học thử</th><th>Thao tác</th></tr></thead>
+                    <tbody>
+                    <tr th:each="l : ${lessons}">
+                        <td th:text="${l.orderIndex}">0</td>
+                        <td class="fw-bold" th:text="${l.title}">Bài</td>
+                        <td>
+                            <span th:if="${l.preview}" class="badge text-bg-success">Có</span>
+                            <span th:unless="${l.preview}" class="badge text-bg-secondary">Không</span>
+                        </td>
+                        <td>
+                            <a class="btn btn-sm btn-outline-secondary" th:href="@{/admin/lessons/{id}/edit(id=${l.id})}">
+                                <i class="bi bi-pencil-square"></i> Sửa</a>
+                            <a class="btn btn-sm btn-outline-primary" th:href="@{/admin/lessons/{id}/questions(id=${l.id})}">
+                                <i class="bi bi-patch-question"></i> Câu hỏi</a>
+                            <form th:action="@{/admin/lessons/{id}/delete(id=${l.id})}" method="post" class="d-inline">
+                                <input type="hidden" name="courseId" th:value="${course.id}"/>
+                                <button class="btn btn-sm btn-outline-danger">Xóa</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(lessons)}"><td colspan="4" class="text-muted">Chưa có bài học.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="panel form-card">
+                <h4 class="mb-3" th:text="${editLesson != null} ? 'Sửa bài học' : 'Thêm bài học'">Thêm bài học</h4>
+                <form id="lessonForm"
+                      th:action="${editLesson != null} ? @{/admin/lessons/{id}(id=${editLesson.id})} : @{/admin/courses/{id}/lessons(id=${course.id})}"
+                      method="post">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">Tiêu đề</label>
+                            <input class="form-control" name="title" th:value="${editLesson != null ? editLesson.title : ''}" required/>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">Thứ tự</label>
+                            <input type="number" class="form-control" name="orderIndex"
+                                   th:value="${editLesson != null ? editLesson.orderIndex : 0}"/>
+                        </div>
+                        <div class="col-md-2 mb-3 d-flex align-items-end">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" name="preview" value="true" id="prev"
+                                       th:checked="${editLesson != null and editLesson.preview}"/>
+                                <label class="form-check-label" for="prev">Học thử</label>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                    <div class="mb-3">
+                        <label class="form-label">Video URL</label>
+                        <input class="form-control" name="videoUrl" placeholder="https://..."
+                               th:value="${editLesson != null ? editLesson.videoUrl : ''}"/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nội dung</label>
+                        <div id="lessonEditorQuill"></div>
+                        <textarea id="lessonEditor" name="content" class="d-none"
+                                  th:text="${editLesson != null ? editLesson.content : ''}"></textarea>
+                        <small class="text-muted">Có thể định dạng cỡ chữ, màu sắc, đậm/nghiêng cho từng đoạn.</small>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-primary" type="submit"
+                                th:text="${editLesson != null} ? 'Lưu thay đổi' : 'Thêm bài học'">Thêm bài học</button>
+                        <a th:if="${editLesson != null}" class="btn btn-secondary"
+                           th:href="@{/admin/courses/{id}/lessons(id=${course.id})}">Hủy sửa</a>
+                    </div>
+                </form>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Video URL</label>
-                <input class="form-control" name="videoUrl" placeholder="https://..."/>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Nội dung</label>
-                <div id="lessonEditorQuill"></div>
-                <textarea id="lessonEditor" name="content" class="d-none"></textarea>
-                <small class="text-muted">Có thể định dạng cỡ chữ, màu sắc, đậm/nghiêng cho từng đoạn.</small>
-            </div>
-            <button class="btn btn-primary" type="submit">Thêm bài học</button>
-        </form>
-    </div>
+        </div>
+    </main>
 </div>
 
-<!-- Quill rich text editor cho noi dung bai hoc -->
 <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet"/>
 <style>
     #lessonEditorQuill .ql-editor { min-height: 180px; font-size: 1rem; }
@@ -105,6 +126,10 @@
     });
 
     const lessonContent = document.querySelector('#lessonEditor');
+    if (lessonContent.value) {
+        lessonQuill.root.innerHTML = lessonContent.value;
+    }
+
     document.querySelector('#lessonForm').addEventListener('submit', () => {
         lessonContent.value = lessonQuill.getText().trim().length === 0 ? '' : lessonQuill.root.innerHTML;
     });

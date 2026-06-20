@@ -21,6 +21,8 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     List<Course> findByStatus(CourseStatus status);
 
+    long countByCategory_Id(Long categoryId);
+
     Page<Course> findByStatusAndCategory_Slug(CourseStatus status, String categorySlug, Pageable pageable);
 
     // Tim kiem theo tu khoa (dung cho ca trang search va RAG retrieval)

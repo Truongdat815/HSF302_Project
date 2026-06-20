@@ -4,28 +4,43 @@
 <body>
 <nav th:replace="~{fragments/layout :: header}"></nav>
 
-<div class="auth-shell">
-    <div class="auth-card">
-        <div class="page-eyebrow text-center">Welcome back</div>
-        <h3>Đăng nhập</h3>
+<div class="container py-4">
+    <div class="auth-split">
+        <aside class="auth-aside">
+            <div class="page-eyebrow">FPT E-learning</div>
+            <h2>Chào mừng trở lại</h2>
+            <p>Đăng nhập để tiếp tục khóa học, theo dõi tiến độ và nhận chứng chỉ.</p>
+            <ul class="auth-points">
+                <li><i class="bi bi-check-circle-fill"></i> Học mọi lúc, mọi nơi</li>
+                <li><i class="bi bi-check-circle-fill"></i> Video bài giảng và bài kiểm tra</li>
+                <li><i class="bi bi-check-circle-fill"></i> Chứng chỉ khi hoàn thành 100%</li>
+            </ul>
+        </aside>
 
-        <div th:if="${param.error}" class="alert alert-danger">Sai email hoặc mật khẩu.</div>
-        <div th:if="${param.logout}" class="alert alert-success">Bạn đã đăng xuất.</div>
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div class="auth-form-side">
+            <div class="auth-card">
+                <div class="page-eyebrow">Welcome back</div>
+                <h3>Đăng nhập</h3>
 
-        <form th:action="@{/login}" method="post">
-            <div class="mb-3">
-                <label class="form-label">Email</label>
-                <input type="email" name="email" class="form-control" required autofocus/>
+                <div th:if="${param.error}" class="alert alert-danger">Sai email hoặc mật khẩu.</div>
+                <div th:if="${param.logout}" class="alert alert-success">Bạn đã đăng xuất.</div>
+                <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+                <form th:action="@{/login}" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="email@example.com" required autofocus/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mật khẩu</label>
+                        <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu" required/>
+                    </div>
+                    <button class="btn btn-primary w-100" type="submit">Đăng nhập</button>
+                </form>
+                <p class="text-center mt-3 mb-0">Chưa có tài khoản?
+                    <a th:href="@{/register}">Đăng ký ngay</a></p>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Mật khẩu</label>
-                <input type="password" name="password" class="form-control" required/>
-            </div>
-            <button class="btn btn-primary w-100" type="submit">Đăng nhập</button>
-        </form>
-        <p class="text-center mt-3">Chưa có tài khoản?
-            <a th:href="@{/register}">Đăng ký</a></p>
+        </div>
     </div>
 </div>
 </body>

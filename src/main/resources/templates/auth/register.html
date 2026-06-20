@@ -4,30 +4,45 @@
 <body>
 <nav th:replace="~{fragments/layout :: header}"></nav>
 
-<div class="auth-shell">
-    <div class="auth-card">
-        <div class="page-eyebrow text-center">Create account</div>
-        <h3>Đăng ký tài khoản</h3>
+<div class="container py-4">
+    <div class="auth-split">
+        <aside class="auth-aside">
+            <div class="page-eyebrow">FPT E-learning</div>
+            <h2>Bắt đầu hành trình học tập</h2>
+            <p>Tạo tài khoản miễn phí để mua khóa học, học online và nhận chứng chỉ.</p>
+            <ul class="auth-points">
+                <li><i class="bi bi-check-circle-fill"></i> Kho khóa học đa dạng</li>
+                <li><i class="bi bi-check-circle-fill"></i> Thanh toán nhanh qua QR</li>
+                <li><i class="bi bi-check-circle-fill"></i> Trợ lý AI tư vấn khóa học</li>
+            </ul>
+        </aside>
 
-        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div class="auth-form-side">
+            <div class="auth-card">
+                <div class="page-eyebrow">Create account</div>
+                <h3>Đăng ký tài khoản</h3>
 
-        <form th:action="@{/register}" method="post">
-            <div class="mb-3">
-                <label class="form-label">Họ tên</label>
-                <input type="text" name="fullName" class="form-control" required autofocus/>
+                <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+                <form th:action="@{/register}" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Họ tên</label>
+                        <input type="text" name="fullName" class="form-control" placeholder="Nguyễn Văn A" required autofocus/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="email@example.com" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mật khẩu</label>
+                        <input type="password" name="password" class="form-control" placeholder="Tối thiểu 6 ký tự" required minlength="6"/>
+                    </div>
+                    <button class="btn btn-primary w-100" type="submit">Đăng ký</button>
+                </form>
+                <p class="text-center mt-3 mb-0">Đã có tài khoản?
+                    <a th:href="@{/login}">Đăng nhập</a></p>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Email</label>
-                <input type="email" name="email" class="form-control" required/>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Mật khẩu</label>
-                <input type="password" name="password" class="form-control" required minlength="6"/>
-            </div>
-            <button class="btn btn-primary w-100" type="submit">Đăng ký</button>
-        </form>
-        <p class="text-center mt-3">Đã có tài khoản?
-            <a th:href="@{/login}">Đăng nhập</a></p>
+        </div>
     </div>
 </div>
 </body>

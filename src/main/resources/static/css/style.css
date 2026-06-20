@@ -1397,3 +1397,59 @@ textarea.form-control { min-height: 130px; }
     .certificate-card { padding: 28px 18px; }
     .qr-image { width: 100%; }
 }
+
+/* ===================== AUTH SPLIT-SCREEN ===================== */
+.auth-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    max-width: 960px;
+    margin: 48px auto;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+.auth-aside {
+    padding: 44px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background:
+        radial-gradient(700px 320px at 88% -10%, rgba(255, 106, 61, .5), transparent 60%),
+        linear-gradient(150deg, #0d1430, #1f3490 70%, #3a5bff);
+}
+.auth-aside h2 { color: #fff; font-size: 1.7rem; line-height: 1.2; margin: 0; }
+.auth-aside p { color: rgba(255, 255, 255, .85); margin-top: 10px; }
+.auth-aside .page-eyebrow { color: #ffd9cc; }
+.auth-points { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 12px; }
+.auth-points li { display: flex; gap: 10px; align-items: center; color: rgba(255, 255, 255, .92); font-size: .92rem; }
+.auth-points i { color: #86efc4; font-size: 1.05rem; }
+.auth-form-side { padding: 44px; display: flex; align-items: center; }
+.auth-form-side .auth-card {
+    width: 100%;
+    padding: 0;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+.auth-form-side .auth-card h3 { text-align: left; }
+@media (max-width: 768px) {
+    .auth-split { grid-template-columns: 1fr; max-width: 460px; margin: 28px auto; }
+    .auth-aside { display: none; }
+    .auth-form-side { padding: 30px; }
+}
+
+/* ===================== STICKY (chi tren desktop) ===================== */
+@media (min-width: 993px) {
+    .course-detail-aside { position: sticky; top: 84px; align-self: start; }
+    .lesson-sidebar { position: sticky; top: 84px; align-self: start; max-height: calc(100vh - 100px); overflow-y: auto; }
+}
+
+/* ===================== COURSE DETAIL polish ===================== */
+.course-detail-aside .card-img-top,
+.course-detail-aside .course-thumb { height: 180px; }
+.course-detail-aside .btn { width: 100%; }
+.review-item { padding: 16px 18px; }
+.review-item + .review-item { margin-top: 10px; }

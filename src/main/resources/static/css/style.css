@@ -2,7 +2,7 @@
    FPT E-learning — Design system (rebuilt)
    Top navbar - hien dai - gradient hero - khong phu thuoc anh ngoai
    ===================================================================== */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
 
 :root {
     --bg: #f3f5fb;
@@ -42,8 +42,11 @@ body {
     margin: 0;
     color: var(--ink);
     background: var(--bg);
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-family: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-size: 15.5px;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
 a { color: var(--primary); text-decoration: none; font-weight: 600; }

@@ -7,6 +7,7 @@ import com.fpt.elearning.repository.LessonRepository;
 import com.fpt.elearning.repository.QuestionRepository;
 import com.fpt.elearning.service.QuizService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/admin")
@@ -97,17 +99,29 @@ public class AdminQuizController {
         return "redirect:/admin/lessons/" + lessonId + "/questions";
     }
 
-    /** Admin tu chon lai dap an dung cho 1 cau hoi (sua sai cua AI) */
+    /**
+     * Admin tu chon lai dap an dung cho 1 cau hoi (sua sai cua AI).
+     * Goi bang AJAX (X-Requested-With) -> tra JSON, cap nhat tai cho khong reload.
+     * Goi thuong (JS tat) -> redirect nhu cu.
+     */
     @PostMapping("/questions/{questionId}/correct")
     @Transactional
-    public String setCorrect(@PathVariable Long questionId,
+    public Object setCorrect(@PathVariable Long questionId,
                              @RequestParam Long choiceId,
-                             @RequestParam Long lessonId,
+                             @RequestParam(required = false) Long lessonId,
+                             @RequestHeader(value = "X-Requested-With", required = false) String requestedWith,
                              RedirectAttributes ra) {
         Question q = questionRepository.findById(questionId).orElse(null);
+        boolean ok = false;
         if (q != null) {
             q.getChoices().forEach(c -> c.setCorrect(c.getId().equals(choiceId)));
             questionRepository.save(q);
+            ok = true;
+        }
+        if ("XMLHttpRequest".equals(requestedWith)) {
+            return ResponseEntity.ok(Map.of("ok", ok));
+        }
+        if (ok) {
             ra.addFlashAttribute("success", "Đã cập nhật đáp án đúng.");
         }
         return "redirect:/admin/lessons/" + lessonId + "/questions";

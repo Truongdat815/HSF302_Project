@@ -13,6 +13,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     boolean existsByCourse_IdAndStudent_Id(Long courseId, Long studentId);
 
+    void deleteByCourse_Id(Long courseId);
+
     @Query("SELECT COALESCE(AVG(r.rating), 0) FROM Review r WHERE r.course.id = :courseId")
     Double averageRating(@Param("courseId") Long courseId);
 }

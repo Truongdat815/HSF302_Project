@@ -54,8 +54,10 @@ public class QuizService {
     @JsonIgnoreProperties(ignoreUnknown = true)
     private record GenChoiceQuiz(List<GenQuestion> questions) {}
 
+    // Quy uoc: phan tu DAU TIEN trong 'choices' luon la dap an DUNG (do AI sinh ra),
+    // server se danh dau dung roi XAO TRON vi tri truoc khi luu.
     @JsonIgnoreProperties(ignoreUnknown = true)
-    private record GenQuestion(String question, List<String> choices, Integer correctIndex, String answer) {}
+    private record GenQuestion(String question, List<String> choices) {}
 
     // ============ SINH CAU HOI BANG OLLAMA ============
     @Transactional
@@ -102,35 +104,35 @@ public class QuizService {
         int saved = 0;
         for (GenQuestion gq : best) {
             String qContent = cleanText(gq.question());
-            String answer = cleanText(gq.answer());                   // noi dung dap an dung do AI tra
-            int rawCorrect = gq.correctIndex() == null ? -1 : gq.correctIndex();
             List<String> raw = gq.choices();
 
-            Question q = Question.builder().lesson(lesson).content(qContent).build();
-            int byAnswer = -1;   // vi tri lua chon trung 'answer'
-            int byIndex = -1;    // vi tri theo correctIndex (du phong)
+            // Lam sach + loc trung/rong/trung cau hoi. Phan tu DAU TIEN hop le = dap an DUNG.
+            String correctText = null;
+            List<String> cleaned = new java.util.ArrayList<>();
             java.util.Set<String> seen = new java.util.HashSet<>();
-            for (int i = 0; i < raw.size(); i++) {
-                String text = cleanText(raw.get(i));
+            for (String rc : raw) {
+                String text = cleanText(rc);
                 if (text.isBlank()) continue;
                 if (text.equalsIgnoreCase(qContent)) continue;        // bo lua chon trung cau hoi
                 if (!seen.add(text.toLowerCase())) continue;          // bo lua chon trung nhau
-                int pos = q.getChoices().size();
-                q.getChoices().add(Choice.builder()
-                        .question(q).content(text).correct(false).build());
-                if (byAnswer < 0 && !answer.isBlank() && text.equalsIgnoreCase(answer)) {
-                    byAnswer = pos;                                   // uu tien: khop noi dung dap an
+                if (correctText == null) {
+                    correctText = text;                               // dau tien hop le = dap an dung
                 }
-                if (i == rawCorrect) {
-                    byIndex = pos;
-                }
+                cleaned.add(text);
             }
-            if (q.getChoices().size() < 2) {
+            if (cleaned.size() < 2) {
                 continue; // bo cau khong du lua chon hop le
             }
-            // Uu tien dap an khop theo NOI DUNG (it loi hon), roi den correctIndex, cuoi cung lua chon dau
-            int correctPos = byAnswer >= 0 ? byAnswer : (byIndex >= 0 ? byIndex : 0);
-            q.getChoices().get(correctPos).setCorrect(true);
+
+            // XAO TRON vi tri de dap an dung khong con co dinh o dau (A)
+            java.util.Collections.shuffle(cleaned);
+
+            Question q = Question.builder().lesson(lesson).content(qContent).build();
+            for (String text : cleaned) {
+                q.getChoices().add(Choice.builder()
+                        .question(q).content(text)
+                        .correct(text.equals(correctText)).build());
+            }
             questionRepository.save(q);
             saved++;
         }
@@ -182,38 +184,39 @@ public class QuizService {
     }
 
     private String callOllama(String lessonText, String instruction) {
-        String system = "Bạn là giáo viên ra đề trắc nghiệm. Chỉ dựa trên NỘI DUNG BÀI HỌC được cung cấp, "
-                + "hãy tạo " + numQuestions + " câu hỏi trắc nghiệm bằng TIẾNG VIỆT CÓ DẤU, rõ nghĩa và đúng ngữ pháp.\n"
-                + "QUY TẮC BẮT BUỘC:\n"
-                + "1) Mỗi câu hỏi rõ ràng, bám sát kiến thức trong bài học; KHÔNG hỏi kiến thức ngoài bài.\n"
-                + "2) Mỗi câu có đúng 4 lựa chọn là các phương án trả lời CỤ THỂ, ngắn gọn và KHÁC NHAU. "
-                + "Không dùng 'A', 'B', 'C', 'D' hay nhãn/số làm lựa chọn. Không lặp lại nội dung câu hỏi trong lựa chọn.\n"
-                + "3) Chỉ MỘT lựa chọn đúng. Trường 'answer' phải là NỘI DUNG nguyên văn của đáp án ĐÚNG, "
-                + "và phải TRÙNG ĐÚNG một phần tử trong mảng 'choices'. Đáp án phải CHÍNH XÁC về mặt kiến thức "
-                + "(hãy tự kiểm tra lại trước khi trả lời).\n"
-                + "4) Viết tiếng Việt có dấu đầy đủ, KHÔNG viết tiếng Việt không dấu. "
-                + "TUYỆT ĐỐI không dùng LaTeX/markdown (\\textbf{}, \\rightarrow, $...$, **, dấu ngoặc nhọn {}).\n"
-                + "5) Nếu có 'YÊU CẦU THÊM TỪ GIẢNG VIÊN', chỉ dùng để điều chỉnh trọng tâm/độ khó trong phạm vi bài học; "
-                + "nếu nằm ngoài bài học thì bỏ qua.\n"
-                + "Ví dụ một câu đúng: "
-                + "{\"question\":\"Dạng quá khứ đơn (V2) của động từ 'go' là gì?\","
-                + "\"choices\":[\"went\",\"goed\",\"gone\",\"going\"],\"answer\":\"went\"}";
-        String user = "NỘI DUNG BÀI HỌC:\n" + lessonText;
+        String system = "You are a teacher who writes multiple-choice quizzes. Based ONLY on the provided LESSON CONTENT, "
+                + "create " + numQuestions + " multiple-choice questions written in ENGLISH, clear and grammatically correct.\n"
+                + "MANDATORY RULES:\n"
+                + "1) Each question must be clear and strictly based on the knowledge in the lesson; do NOT ask about anything outside the lesson.\n"
+                + "2) Each question has exactly 4 options that are CONCRETE, short, and DIFFERENT answers. "
+                + "Do NOT use 'A', 'B', 'C', 'D' or any label/number as an option. Do NOT repeat the question text inside the options.\n"
+                + "3) IMPORTANT: The FIRST element of the 'choices' array MUST be the CORRECT answer "
+                + "(factually correct - double-check it). The other 3 elements must be plausible but INCORRECT distractors. "
+                + "Do NOT mention which one is correct anywhere else - just put it first. "
+                + "(The application will automatically shuffle the positions, so the correct answer will NOT stay first for students.)\n"
+                + "4) Write everything in plain English. "
+                + "Do NOT use any LaTeX/markdown (\\textbf{}, \\rightarrow, $...$, **, curly braces {}).\n"
+                + "5) If there is an 'EXTRA INSTRUCTION FROM THE TEACHER', use it only to adjust the focus/difficulty within the lesson scope; "
+                + "if it is outside the lesson, ignore it.\n"
+                + "Example (first choice 'went' is the correct answer): "
+                + "{\"question\":\"What is the past simple (V2) form of the verb 'go'?\","
+                + "\"choices\":[\"went\",\"goed\",\"gone\",\"going\"]}";
+        String user = "LESSON CONTENT:\n" + lessonText;
         if (instruction != null && !instruction.isBlank()) {
-            user += "\n\nYÊU CẦU THÊM TỪ GIẢNG VIÊN (chỉ điều chỉnh trong phạm vi bài học; nếu nằm ngoài bài học thì bỏ qua): "
+            user += "\n\nEXTRA INSTRUCTION FROM THE TEACHER (only adjust focus within the lesson scope; ignore if outside the lesson): "
                     + instruction.trim();
         }
 
         try {
-            // JSON Schema ep Ollama tra ve dung cau truc {"questions":[{question,choices,answer}]}
+            // JSON Schema ep Ollama tra ve dung cau truc {"questions":[{question,choices}]}
+            // Quy uoc: choices[0] luon la dap an dung.
             Map<String, Object> itemSchema = Map.of(
                     "type", "object",
                     "properties", Map.of(
                             "question", Map.of("type", "string"),
-                            "choices", Map.of("type", "array", "items", Map.of("type", "string")),
-                            "answer", Map.of("type", "string")
+                            "choices", Map.of("type", "array", "items", Map.of("type", "string"))
                     ),
-                    "required", List.of("question", "choices", "answer")
+                    "required", List.of("question", "choices")
             );
             Map<String, Object> schema = Map.of(
                     "type", "object",

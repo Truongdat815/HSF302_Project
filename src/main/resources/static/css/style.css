@@ -1117,10 +1117,22 @@ textarea.form-control { min-height: 130px; }
 .lesson-link.active { color: #fff !important; background: linear-gradient(135deg, var(--primary), var(--primary-d)); border-color: var(--primary-d); }
 
 /* ===================== RICH TEXT ===================== */
-.rich-content { padding: 24px; line-height: 1.8; }
+.rich-content {
+    padding: 24px;
+    line-height: 1.8;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    overflow-x: hidden;
+}
 .rich-content :is(h1, h2, h3) { margin-top: 1.2em; }
-.rich-content img { max-width: 100%; border-radius: 12px; }
+.rich-content :is(h1, h2, h3, p, span, li, div) { max-width: 100%; }
+.rich-content img { max-width: 100%; height: auto; border-radius: 12px; }
 .rich-content a { text-decoration: underline; }
+
+/* Grid item can min-width:0 de noi dung dai co lai duoc, khong tran de cot ben canh */
+.admin-layout > main, .admin-layout > aside { min-width: 0; }
 
 /* ===================== LIST GROUP ===================== */
 .list-group { display: grid; gap: 9px; }

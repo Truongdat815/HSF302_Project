@@ -24,9 +24,9 @@
 
             <div class="panel form-card mb-4">
                 <h5 class="mb-1"><i class="bi bi-stars text-primary"></i> Sinh câu hỏi bằng AI</h5>
-                <p class="text-muted small">Ollama đọc nội dung bài học để tạo câu hỏi. Bộ câu hỏi cũ sẽ bị thay thế.</p>
+                <p class="text-muted small">Ollama đọc nội dung bài học để tạo câu hỏi <strong>bằng tiếng Anh</strong> (model local xử lý tiếng Anh chính xác hơn). Bộ câu hỏi cũ sẽ bị thay thế.</p>
                 <form th:action="@{/admin/lessons/{id}/generate(id=${lesson.id})}" method="post"
-                      class="d-flex gap-2 flex-wrap align-items-end"
+                      class="d-flex gap-2 flex-wrap align-items-start"
                       onsubmit="this.querySelector('button[type=submit]').disabled=true; this.querySelector('button[type=submit]').innerHTML='Đang sinh...';">
                     <div class="flex-grow-1">
                         <label class="form-label small mb-1">Yêu cầu thêm (tùy chọn)</label>
@@ -34,7 +34,10 @@
                                placeholder="VD: tập trung vào động từ bất quy tắc, mức trung bình"/>
                         <small class="text-muted">Chỉ điều chỉnh trong phạm vi bài học; yêu cầu ngoài bài sẽ bị bỏ qua.</small>
                     </div>
-                    <button class="btn btn-primary" type="submit"><i class="bi bi-magic"></i> Sinh câu hỏi</button>
+                    <div>
+                        <label class="form-label small mb-1 d-block">&nbsp;</label>
+                        <button class="btn btn-primary" type="submit"><i class="bi bi-magic"></i> Sinh câu hỏi</button>
+                    </div>
                 </form>
             </div>
 
@@ -51,12 +54,13 @@
                     </form>
                 </div>
                 <p class="text-muted small mb-2">Bấm <strong>"Đặt đúng"</strong> để chọn lại đáp án đúng nếu AI gán sai.</p>
-                <ul class="list-group">
-                    <li class="list-group-item d-flex justify-content-between align-items-center gap-2" th:each="c : ${q.choices}">
+                <ul class="list-group" th:attr="data-qid=${q.id},data-lesson-id=${lesson.id}">
+                    <li class="list-group-item d-flex justify-content-between align-items-center gap-2 choice-row"
+                        th:each="c : ${q.choices}" th:attr="data-choice-id=${c.id}">
                         <span th:text="${c.content}">Đáp án</span>
-                        <span class="d-inline-flex align-items-center gap-2">
+                        <span class="choice-actions d-inline-flex align-items-center gap-2">
                             <span th:if="${c.correct}" class="badge text-bg-success"><i class="bi bi-check-lg"></i> Đúng</span>
-                            <form th:unless="${c.correct}" th:action="@{/admin/questions/{qid}/correct(qid=${q.id})}" method="post" class="m-0">
+                            <form th:unless="${c.correct}" th:action="@{/admin/questions/{qid}/correct(qid=${q.id})}" method="post" class="m-0 set-correct-form">
                                 <input type="hidden" name="lessonId" th:value="${lesson.id}"/>
                                 <input type="hidden" name="choiceId" th:value="${c.id}"/>
                                 <button class="btn btn-sm btn-outline-primary" type="submit">Đặt đúng</button>
@@ -84,5 +88,55 @@
         </div>
     </main>
 </div>
+
+<script th:inline="javascript">
+    // Token CSRF de goi POST bang fetch
+    const CSRF_PARAM = /*[[${_csrf.parameterName}]]*/ '_csrf';
+    const CSRF_TOKEN = /*[[${_csrf.token}]]*/ '';
+
+    // Bat submit cua nut "Dat dung" -> goi AJAX, cap nhat tai cho, KHONG reload trang
+    document.addEventListener('submit', function (e) {
+        const form = e.target.closest('.set-correct-form');
+        if (!form) return;
+        e.preventDefault();
+
+        const url = form.getAttribute('action');
+        const ul = form.closest('ul');
+        const choiceId = form.querySelector('input[name=choiceId]').value;
+        const lessonId = ul.getAttribute('data-lesson-id');
+        const btn = form.querySelector('button');
+        btn.disabled = true;
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: new URLSearchParams({ choiceId: choiceId, lessonId: lessonId, [CSRF_PARAM]: CSRF_TOKEN })
+        })
+            .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(function () { refreshChoices(ul, choiceId, url, lessonId); })
+            .catch(function () { btn.disabled = false; alert('Không cập nhật được đáp án, vui lòng thử lại.'); });
+    });
+
+    // Ve lai cac nut/nhan trong 1 cau hoi: dap an duoc chon -> badge "Dung", con lai -> nut "Dat dung"
+    function refreshChoices(ul, chosenId, url, lessonId) {
+        ul.querySelectorAll('.choice-row').forEach(function (li) {
+            const actions = li.querySelector('.choice-actions');
+            if (li.getAttribute('data-choice-id') === String(chosenId)) {
+                actions.innerHTML = '<span class="badge text-bg-success"><i class="bi bi-check-lg"></i> Đúng</span>';
+            } else {
+                const cid = li.getAttribute('data-choice-id');
+                actions.innerHTML =
+                    '<form action="' + url + '" method="post" class="m-0 set-correct-form">' +
+                    '<input type="hidden" name="lessonId" value="' + lessonId + '"/>' +
+                    '<input type="hidden" name="choiceId" value="' + cid + '"/>' +
+                    '<button class="btn btn-sm btn-outline-primary" type="submit">Đặt đúng</button>' +
+                    '</form>';
+            }
+        });
+    }
+</script>
 </body>
 </html>

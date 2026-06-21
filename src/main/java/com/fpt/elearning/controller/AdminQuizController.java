@@ -96,4 +96,20 @@ public class AdminQuizController {
         ra.addFlashAttribute("success", "Da xoa cau hoi.");
         return "redirect:/admin/lessons/" + lessonId + "/questions";
     }
+
+    /** Admin tu chon lai dap an dung cho 1 cau hoi (sua sai cua AI) */
+    @PostMapping("/questions/{questionId}/correct")
+    @Transactional
+    public String setCorrect(@PathVariable Long questionId,
+                             @RequestParam Long choiceId,
+                             @RequestParam Long lessonId,
+                             RedirectAttributes ra) {
+        Question q = questionRepository.findById(questionId).orElse(null);
+        if (q != null) {
+            q.getChoices().forEach(c -> c.setCorrect(c.getId().equals(choiceId)));
+            questionRepository.save(q);
+            ra.addFlashAttribute("success", "Đã cập nhật đáp án đúng.");
+        }
+        return "redirect:/admin/lessons/" + lessonId + "/questions";
+    }
 }

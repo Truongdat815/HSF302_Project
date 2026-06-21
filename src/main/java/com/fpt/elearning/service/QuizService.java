@@ -55,7 +55,7 @@ public class QuizService {
     private record GenChoiceQuiz(List<GenQuestion> questions) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    private record GenQuestion(String question, List<String> choices, Integer correctIndex) {}
+    private record GenQuestion(String question, List<String> choices, Integer correctIndex, String answer) {}
 
     // ============ SINH CAU HOI BANG OLLAMA ============
     @Transactional
@@ -102,29 +102,34 @@ public class QuizService {
         int saved = 0;
         for (GenQuestion gq : best) {
             String qContent = cleanText(gq.question());
-            int rawCorrect = gq.correctIndex() == null ? 0 : gq.correctIndex();
+            String answer = cleanText(gq.answer());                   // noi dung dap an dung do AI tra
+            int rawCorrect = gq.correctIndex() == null ? -1 : gq.correctIndex();
             List<String> raw = gq.choices();
 
             Question q = Question.builder().lesson(lesson).content(qContent).build();
-            int correctPos = -1;
+            int byAnswer = -1;   // vi tri lua chon trung 'answer'
+            int byIndex = -1;    // vi tri theo correctIndex (du phong)
             java.util.Set<String> seen = new java.util.HashSet<>();
             for (int i = 0; i < raw.size(); i++) {
                 String text = cleanText(raw.get(i));
                 if (text.isBlank()) continue;
                 if (text.equalsIgnoreCase(qContent)) continue;        // bo lua chon trung cau hoi
                 if (!seen.add(text.toLowerCase())) continue;          // bo lua chon trung nhau
-                if (i == rawCorrect) {
-                    correctPos = q.getChoices().size();               // vi tri dap an dung sau khi loc
-                }
+                int pos = q.getChoices().size();
                 q.getChoices().add(Choice.builder()
                         .question(q).content(text).correct(false).build());
+                if (byAnswer < 0 && !answer.isBlank() && text.equalsIgnoreCase(answer)) {
+                    byAnswer = pos;                                   // uu tien: khop noi dung dap an
+                }
+                if (i == rawCorrect) {
+                    byIndex = pos;
+                }
             }
             if (q.getChoices().size() < 2) {
                 continue; // bo cau khong du lua chon hop le
             }
-            if (correctPos < 0) {
-                correctPos = 0; // dap an dung bi loc -> mac dinh lua chon dau
-            }
+            // Uu tien dap an khop theo NOI DUNG (it loi hon), roi den correctIndex, cuoi cung lua chon dau
+            int correctPos = byAnswer >= 0 ? byAnswer : (byIndex >= 0 ? byIndex : 0);
             q.getChoices().get(correctPos).setCorrect(true);
             questionRepository.save(q);
             saved++;
@@ -183,15 +188,16 @@ public class QuizService {
                 + "1) Mỗi câu hỏi rõ ràng, bám sát kiến thức trong bài học; KHÔNG hỏi kiến thức ngoài bài.\n"
                 + "2) Mỗi câu có đúng 4 lựa chọn là các phương án trả lời CỤ THỂ, ngắn gọn và KHÁC NHAU. "
                 + "Không dùng 'A', 'B', 'C', 'D' hay nhãn/số làm lựa chọn. Không lặp lại nội dung câu hỏi trong lựa chọn.\n"
-                + "3) Chỉ MỘT lựa chọn đúng; 'correctIndex' là vị trí (bắt đầu từ 0) của lựa chọn đúng trong mảng 'choices' "
-                + "và phải THẬT SỰ là đáp án đúng về mặt kiến thức.\n"
+                + "3) Chỉ MỘT lựa chọn đúng. Trường 'answer' phải là NỘI DUNG nguyên văn của đáp án ĐÚNG, "
+                + "và phải TRÙNG ĐÚNG một phần tử trong mảng 'choices'. Đáp án phải CHÍNH XÁC về mặt kiến thức "
+                + "(hãy tự kiểm tra lại trước khi trả lời).\n"
                 + "4) Viết tiếng Việt có dấu đầy đủ, KHÔNG viết tiếng Việt không dấu. "
                 + "TUYỆT ĐỐI không dùng LaTeX/markdown (\\textbf{}, \\rightarrow, $...$, **, dấu ngoặc nhọn {}).\n"
                 + "5) Nếu có 'YÊU CẦU THÊM TỪ GIẢNG VIÊN', chỉ dùng để điều chỉnh trọng tâm/độ khó trong phạm vi bài học; "
                 + "nếu nằm ngoài bài học thì bỏ qua.\n"
                 + "Ví dụ một câu đúng: "
                 + "{\"question\":\"Dạng quá khứ đơn (V2) của động từ 'go' là gì?\","
-                + "\"choices\":[\"went\",\"goed\",\"gone\",\"going\"],\"correctIndex\":0}";
+                + "\"choices\":[\"went\",\"goed\",\"gone\",\"going\"],\"answer\":\"went\"}";
         String user = "NỘI DUNG BÀI HỌC:\n" + lessonText;
         if (instruction != null && !instruction.isBlank()) {
             user += "\n\nYÊU CẦU THÊM TỪ GIẢNG VIÊN (chỉ điều chỉnh trong phạm vi bài học; nếu nằm ngoài bài học thì bỏ qua): "
@@ -199,15 +205,15 @@ public class QuizService {
         }
 
         try {
-            // JSON Schema ep Ollama tra ve dung cau truc {"questions":[{question,choices,correctIndex}]}
+            // JSON Schema ep Ollama tra ve dung cau truc {"questions":[{question,choices,answer}]}
             Map<String, Object> itemSchema = Map.of(
                     "type", "object",
                     "properties", Map.of(
                             "question", Map.of("type", "string"),
                             "choices", Map.of("type", "array", "items", Map.of("type", "string")),
-                            "correctIndex", Map.of("type", "integer")
+                            "answer", Map.of("type", "string")
                     ),
-                    "required", List.of("question", "choices", "correctIndex")
+                    "required", List.of("question", "choices", "answer")
             );
             Map<String, Object> schema = Map.of(
                     "type", "object",

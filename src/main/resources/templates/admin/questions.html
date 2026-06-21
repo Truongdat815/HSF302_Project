@@ -50,10 +50,18 @@
                         <button class="btn btn-sm btn-outline-danger">Xóa</button>
                     </form>
                 </div>
+                <p class="text-muted small mb-2">Bấm <strong>"Đặt đúng"</strong> để chọn lại đáp án đúng nếu AI gán sai.</p>
                 <ul class="list-group">
-                    <li class="list-group-item d-flex justify-content-between align-items-center" th:each="c : ${q.choices}">
+                    <li class="list-group-item d-flex justify-content-between align-items-center gap-2" th:each="c : ${q.choices}">
                         <span th:text="${c.content}">Đáp án</span>
-                        <span th:if="${c.correct}" class="badge text-bg-success"><i class="bi bi-check-lg"></i> Đúng</span>
+                        <span class="d-inline-flex align-items-center gap-2">
+                            <span th:if="${c.correct}" class="badge text-bg-success"><i class="bi bi-check-lg"></i> Đúng</span>
+                            <form th:unless="${c.correct}" th:action="@{/admin/questions/{qid}/correct(qid=${q.id})}" method="post" class="m-0">
+                                <input type="hidden" name="lessonId" th:value="${lesson.id}"/>
+                                <input type="hidden" name="choiceId" th:value="${c.id}"/>
+                                <button class="btn btn-sm btn-outline-primary" type="submit">Đặt đúng</button>
+                            </form>
+                        </span>
                     </li>
                 </ul>
             </div>

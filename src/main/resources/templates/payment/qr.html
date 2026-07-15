@@ -4,52 +4,123 @@
 <body>
 <nav th:replace="~{fragments/layout :: header}"></nav>
 
-<div class="container py-4">
-    <div class="page-head">
-        <div>
-            <div class="page-eyebrow">SePay payment</div>
-            <h1 class="page-title">Quét QR để thanh toán</h1>
-            <p class="page-subtitle">Dùng đúng nội dung chuyển khoản để hệ thống đối soát đơn hàng chính xác.</p>
-        </div>
-    </div>
-
-    <div class="admin-layout">
-        <div class="card text-center">
-            <div class="card-body">
-                <div class="page-eyebrow">Bank QR</div>
-                <img th:src="${qrUrl}" alt="QR chuyển khoản" class="img-fluid qr-image"/>
-                <p class="text-muted small mt-3">Mở app ngân hàng, quét QR và xác nhận thanh toán.</p>
+<div class="payment-shell">
+    <div class="container payment-page">
+        <section class="payment-hero">
+            <div>
+                <div class="page-eyebrow">SePay payment</div>
+                <h1>Quét QR để hoàn tất đơn hàng</h1>
+                <p>Dùng đúng số tiền và nội dung chuyển khoản để hệ thống tự kích hoạt khóa học sau khi SePay gửi xác nhận.</p>
             </div>
-        </div>
-
-        <aside class="panel form-card">
-            <div class="page-eyebrow">Transfer info</div>
-            <h4 class="mb-3">Thông tin chuyển khoản</h4>
-            <div class="table-wrap mb-3">
-                <table class="table table-sm">
-                    <tr><td>Ngân hàng</td><td class="fw-bold" th:text="${bank}">MBBank</td></tr>
-                    <tr><td>Số tài khoản</td><td class="fw-bold" th:text="${accountNumber}">0968097907</td></tr>
-                    <tr><td>Chủ tài khoản</td><td class="fw-bold" th:text="${accountName}">NGO HOANG TRUONG DAT</td></tr>
-                    <tr><td>Số tiền</td>
-                        <td class="fw-bold text-danger"
-                            th:text="${#numbers.formatDecimal(payment.amount,0,'COMMA',0,'POINT')} + ' đ'">0 đ</td></tr>
-                    <tr><td>Nội dung</td>
-                        <td><span class="badge text-bg-warning fs-6" th:text="${payment.transferCode}">DH15</span></td></tr>
-                </table>
-            </div>
-            <div class="alert alert-warning small">
-                Vui lòng chuyển khoản <strong>đúng nội dung</strong>
-                <span th:text="${payment.transferCode}">DH15</span> để hệ thống xác nhận đúng đơn hàng.
-            </div>
-
-            <div class="payment-note">
-                Sau khi chuyển khoản, quay lại trang khóa học của tôi để kiểm tra trạng thái kích hoạt.
-                <div class="mt-3">
-                    <a class="btn btn-primary btn-sm" th:href="@{/my-courses}">Khóa học của tôi</a>
+            <div class="payment-status-card" th:attr="data-order-id=${order.id}">
+                <span class="payment-status-dot"></span>
+                <div>
+                    <small>Trạng thái</small>
+                    <strong id="paymentStatusText" th:text="${payment.status}">PENDING</strong>
                 </div>
             </div>
-        </aside>
+        </section>
+
+        <section class="payment-grid">
+            <div class="payment-qr-panel">
+                <div class="payment-qr-head">
+                    <span><i class="bi bi-qr-code-scan"></i> Mã QR ngân hàng</span>
+                    <strong th:text="${payment.transferCode}">DH15</strong>
+                </div>
+                <div class="payment-qr-frame">
+                    <img th:src="${qrUrl}" alt="QR chuyển khoản" class="payment-qr-image"/>
+                </div>
+                <div class="payment-amount-focus">
+                    <span>Số tiền cần chuyển</span>
+                    <strong th:text="${#numbers.formatDecimal(payment.amount,0,'COMMA',0,'POINT')} + ' đ'">0 đ</strong>
+                </div>
+                <p class="payment-muted">Mở app ngân hàng, quét QR, kiểm tra nội dung rồi xác nhận chuyển khoản.</p>
+            </div>
+
+            <aside class="payment-info-panel">
+                <div class="page-eyebrow">Transfer info</div>
+                <h2>Thông tin chuyển khoản</h2>
+
+                <div class="payment-info-list">
+                    <div class="payment-info-row">
+                        <span>Ngân hàng</span>
+                        <strong th:text="${bank}">MBBank</strong>
+                    </div>
+                    <div class="payment-info-row">
+                        <span>Số tài khoản</span>
+                        <strong data-copy-value th:text="${accountNumber}">0968097907</strong>
+                        <button class="copy-btn" type="button">Copy</button>
+                    </div>
+                    <div class="payment-info-row">
+                        <span>Chủ tài khoản</span>
+                        <strong th:text="${accountName}">NGO HOANG TRUONG DAT</strong>
+                    </div>
+                    <div class="payment-info-row is-important">
+                        <span>Nội dung</span>
+                        <strong data-copy-value th:text="${payment.transferCode}">DH15</strong>
+                        <button class="copy-btn" type="button">Copy</button>
+                    </div>
+                </div>
+
+                <div class="payment-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <p>Chuyển đúng nội dung <strong th:text="${payment.transferCode}">DH15</strong>. Sai nội dung có thể làm đơn hàng không được tự xác nhận.</p>
+                </div>
+
+                <ol class="payment-steps">
+                    <li>Quét QR bằng app ngân hàng.</li>
+                    <li>Kiểm tra số tiền và nội dung chuyển khoản.</li>
+                    <li>Chờ hệ thống tự cập nhật trạng thái thanh toán.</li>
+                </ol>
+
+                <div class="payment-actions">
+                    <a class="btn btn-primary" th:href="@{/my-courses}">
+                        <i class="bi bi-collection-play"></i> Khóa học của tôi
+                    </a>
+                    <a class="btn btn-secondary" th:href="@{/cart}">
+                        <i class="bi bi-cart"></i> Giỏ hàng
+                    </a>
+                </div>
+            </aside>
+        </section>
     </div>
 </div>
+
+<script th:inline="javascript">
+    const orderId = /*[[${order.id}]]*/ 0;
+    const statusText = document.getElementById('paymentStatusText');
+    const statusCard = document.querySelector('.payment-status-card');
+
+    document.querySelectorAll('.copy-btn').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const valueNode = button.parentElement.querySelector('[data-copy-value]');
+            if (!valueNode || !navigator.clipboard) return;
+            navigator.clipboard.writeText(valueNode.textContent.trim()).then(function () {
+                const old = button.textContent;
+                button.textContent = 'Đã copy';
+                setTimeout(function () { button.textContent = old; }, 1200);
+            });
+        });
+    });
+
+    function updatePaymentStatus(status) {
+        if (!statusText || !status) return;
+        statusText.textContent = status;
+        statusCard.classList.toggle('is-success', status === 'SUCCESS');
+        statusCard.classList.toggle('is-failed', status === 'FAILED');
+        if (status === 'SUCCESS') {
+            window.setTimeout(function () { window.location.href = '/my-courses'; }, 1200);
+        }
+    }
+
+    if (orderId) {
+        window.setInterval(function () {
+            fetch('/payment/' + orderId + '/status')
+                .then(function (response) { return response.json(); })
+                .then(function (data) { updatePaymentStatus(data.status); })
+                .catch(function () {});
+        }, 4000);
+    }
+</script>
 </body>
 </html>

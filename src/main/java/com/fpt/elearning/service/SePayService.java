@@ -28,10 +28,35 @@ public class SePayService {
     }
 
     /**
-     * Tao link anh QR SePay (VietQR) co san so tien + noi dung.
-     * VD: https://qr.sepay.vn/img?acc=0968097907&bank=MBBank&amount=200000&des=DH15
+     * Tao anh VietQR co san so tien + noi dung. Webhook van do SePay xu ly,
+     * con QR nen dung dinh dang VietQR chuan de app ngan hang quet on dinh hon.
+     * VD: https://img.vietqr.io/image/MB-0968097907-compact2.png?amount=200000&addInfo=DH15
      */
     public String buildQrUrl(BigDecimal amount, String content) {
+        long amountVnd = amount.setScale(0, java.math.RoundingMode.HALF_UP).longValueExact();
+        return "https://img.vietqr.io/image/" + encPath(bankCode(props.getBank()))
+                + "-" + encPath(props.getAccountNumber())
+                + "-compact2.png"
+                + "?amount=" + amountVnd
+                + "&addInfo=" + enc(content)
+                + "&accountName=" + enc(props.getAccountName());
+    }
+
+    /**
+     * SePay config hien thi ten ngan hang, trong khi VietQR can ma ngan hang.
+     */
+    private String bankCode(String bank) {
+        if (bank == null || bank.isBlank()) {
+            return "";
+        }
+        String normalized = bank.replaceAll("[\\s_-]+", "").toUpperCase();
+        if (normalized.equals("MBBANK") || normalized.equals("MB")) {
+            return "MB";
+        }
+        return bank;
+    }
+
+    public String buildSePayQrUrl(BigDecimal amount, String content) {
         long amountVnd = amount.setScale(0, java.math.RoundingMode.HALF_UP).longValueExact();
         return props.getQrBaseUrl()
                 + "?acc=" + enc(props.getAccountNumber())
@@ -69,5 +94,9 @@ public class SePayService {
 
     private String enc(String v) {
         return URLEncoder.encode(v == null ? "" : v, StandardCharsets.UTF_8);
+    }
+
+    private String encPath(String v) {
+        return enc(v).replace("+", "%20");
     }
 }

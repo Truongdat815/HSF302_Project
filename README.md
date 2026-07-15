@@ -93,16 +93,38 @@ Kiểm tra Ollama sống: mở terminal khác chạy `ollama run qwen2.5:3b "Xin
 ### Bước 5 — (Tùy chọn) Cấu hình SePay
 > Có thể bỏ qua nếu chỉ demo các phần khác. Cần khi test thanh toán thật.
 
+Luồng đúng là: **app local chạy ở `localhost:8080` → mở public tunnel → lấy URL public cấu hình vào SePay webhook**. SePay không gọi được trực tiếp vào `localhost`.
+
 1. Đăng ký https://my.sepay.vn, liên kết tài khoản ngân hàng nhận tiền.
-2. Vào **Tích hợp Webhooks → Thêm webhook**:
-   - **URL**: `https://<domain-public>/api/payments/sepay/webhook`
-   - **API Key**: đặt 1 chuỗi bí mật (sẽ điền trùng ở Bước 6).
-   - Bật **"Dùng để xác thực thanh toán"**, tắt "Chỉ gửi khi có mã thanh toán".
-3.  Webhook là **server→server**, `localhost` SePay không gọi tới được. Khi test local mở tunnel:
+2. Đảm bảo tài khoản ngân hàng/API ngân hàng đã kết nối thành công trên SePay. Khi chuyển khoản test, giao dịch phải xuất hiện trong trang **Giao dịch** của SePay trước.
+3. Chạy backend Spring Boot trước:
    ```bash
+   mvn spring-boot:run
+   ```
+   Kiểm tra app mở được ở `http://localhost:8080`.
+4. Tạo public URL cho backend local bằng một trong hai cách:
+   ```bash
+   # Cách 1: localtunnel
+   npx localtunnel --port 8080
+
+   # Cách 2: ngrok
    ngrok http 8080
    ```
-   Lấy URL `https://xxxx.ngrok-free.app` đặt làm webhook URL.
+   Ví dụ localtunnel trả về `https://calm-crabs-relax.loca.lt` thì webhook URL sẽ là:
+   ```text
+   https://calm-crabs-relax.loca.lt/api/payments/sepay/webhook
+   ```
+5. Vào **Tích hợp Webhooks → Thêm webhook**:
+   - **URL**: `https://<domain-public>/api/payments/sepay/webhook`
+   - **API Key**: đặt đúng chuỗi bí mật, ví dụ `sepay_key_hsf302_project_2026`
+   - Bật **Dùng để xác thực thanh toán**.
+   - Có thể bật **Chỉ gửi khi có mã thanh toán** nếu đã cấu hình nhận diện mã thanh toán đúng ở bước 6.
+6. Vào **Cấu hình công ty → Cấu hình chung → Nhận diện mã thanh toán**:
+   - Bật **Nhận diện mã thanh toán**.
+   - Tiền tố: `DH`
+   - Hậu tố: từ `1` đến `10` ký tự, kiểu **Số nguyên**.
+   - Lưu ý: app sinh mã dạng `DH7`, `DH15`, không phải `DH007`. Nếu đặt hậu tố tối thiểu 3 ký tự thì `DH7` sẽ không được nhận diện.
+7. Mỗi lần restart localtunnel/ngrok, public URL có thể đổi. Khi URL đổi phải cập nhật lại webhook URL trên SePay.
 
 ### Bước 6 — Tạo file cấu hình bí mật `application-local.properties`
 Tạo file **ở thư mục gốc dự án** (cùng cấp `pom.xml`). File này **đã được `.gitignore`** — không bị đẩy lên git.
@@ -114,10 +136,11 @@ cloudinary.api-key=123456789
 cloudinary.api-secret=abcXyz_secret
 
 # ----- SePay (nếu dùng) -----
-sepay.webhook-api-key=chuoi_bi_mat_giong_het_ben_sepay
+sepay.webhook-api-key=sepay_key_hsf302_project_2026
 sepay.account-number=0968097907
-sepay.account-name=NGUYEN VAN A
+sepay.account-name=NGO HOANG TRUONG DAT
 sepay.bank=MBBank
+sepay.prefix=DH
 
 # ----- PostgreSQL (sửa nếu khác mặc định) -----
 spring.datasource.username=postgres
@@ -561,7 +584,10 @@ flowchart TD
 | App không khởi động, lỗi kết nối DB | Chưa bật PostgreSQL / sai user-mật khẩu → sửa `application-local.properties` |
 | Chat trả "trợ lý AI không hoạt động" | Ollama chưa chạy → bật `ollama serve`; lỗi CUDA → chạy CPU mode (Bước 3) |
 | Sinh quiz báo lỗi AI | Ollama chưa chạy hoặc model chậm → đợi / thử lại / thêm câu hỏi thủ công |
-| Webhook SePay không về | `localhost` không nhận được webhook → dùng **ngrok**; kiểm tra API key trùng nhau |
+| SePay có giao dịch nhưng web vẫn `PENDING` | Kiểm tra webhook URL có đang trỏ đúng public tunnel hiện tại không; public URL đổi thì phải cập nhật lại trên SePay |
+| Webhook SePay không về | `localhost` không nhận được webhook → dùng **localtunnel/ngrok**; kiểm tra API key trùng nhau |
+| SePay có giao dịch nhưng không thấy mã thanh toán | Kiểm tra **Cấu hình công ty → Nhận diện mã thanh toán**: tiền tố `DH`, hậu tố từ `1` đến `10` ký tự số |
+| QR quét được nhưng nội dung chuyển khoản sai | Kiểm tra QR phải hiện đúng số tiền và nội dung `DH<orderId>`; nếu cần thì dùng nút Copy nội dung trên trang thanh toán |
 | Giao diện chưa cập nhật | Cache trình duyệt → **Ctrl + F5** |
 | Editor (Quill) không hiện | Mất mạng (Quill tải qua CDN jsDelivr) → cần có mạng để tải editor |
 | Chữ tiếng Việt bị lỗi `Ã³` | Đặt **File Encoding = UTF-8** trong IDE rồi mở lại file |

@@ -77,8 +77,9 @@ public class QuizService {
         List<GenQuestion> best = java.util.Collections.emptyList();
         for (int attempt = 1; attempt <= 3; attempt++) {
             GenChoiceQuiz gen;
+            String aiJson = callOllama(plain, instruction);
             try {
-                gen = objectMapper.readValue(callOllama(plain, instruction), GenChoiceQuiz.class);
+                gen = objectMapper.readValue(aiJson, GenChoiceQuiz.class);
             } catch (Exception ex) {
                 log.warn("Lan {}: khong parse duoc JSON tu Ollama", attempt);
                 continue;

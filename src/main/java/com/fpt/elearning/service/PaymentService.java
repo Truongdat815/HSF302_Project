@@ -39,10 +39,17 @@ public class PaymentService {
             return false;
         }
 
-        // Trích orderId từ nội dung chuyển khoản (vd: DH15)
+        // Trich orderId tu cac field SePay co the gui ma thanh toan (vd: DH15).
         Long orderId = sePayService.extractOrderId(payload.getContent());
         if (orderId == null) {
-            log.warn("Không tìm thấy mã đơn hàng trong nội dung: {}", payload.getContent());
+            orderId = sePayService.extractOrderId(payload.getDescription());
+        }
+        if (orderId == null) {
+            orderId = sePayService.extractOrderId(payload.getCode());
+        }
+        if (orderId == null) {
+            log.warn("Khong tim thay ma don hang trong webhook SePay: content={}, code={}, description={}",
+                    payload.getContent(), payload.getCode(), payload.getDescription());
             return false;
         }
 

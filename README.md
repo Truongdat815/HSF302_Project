@@ -42,6 +42,17 @@
 
 ## 3. Cài đặt từng bước
 
+> ⚡ **BẢNG TÓM TẮT CHẠY NHANH (QUICK START):**
+> 
+> 1. **Database:** Tạo database PostgreSQL: `CREATE DATABASE elearning_db;`
+> 2. **AI (Ollama):** Mở terminal gõ: `ollama pull qwen2.5:3b` và giữ `ollama serve` chạy ngầm.
+> 3. **Config:** Copy `application-local.properties.example` thành `application-local.properties` và sửa thông tin DB/Cloudinary (nếu cần).
+> 4. **Chạy App:** Gõ `mvn spring-boot:run` (hoặc nhấn **Run** trong IntelliJ) ➔ Mở trình duyệt: **`http://localhost:8080`**
+> 5. **Tài khoản test có sẵn:**
+>    - **Admin:** `admin@fpt.edu.vn` | Mật khẩu: `123456`
+>    - **Học viên:** `student@fpt.edu.vn` | Mật khẩu: `123456`
+> 6. **(Tùy chọn) SePay Webhook:** Đường dẫn Webhook **đã được cấu hình sẵn trên SePay**. Chỉ cần gõ lệnh `ngrok http --url=overidle-daisy-disobligingly.ngrok-free.dev 8080` là tự động kết nối thanh toán thật.
+
 ### Bước 1 — Lấy source code
 ```bash
 git clone <link-repo>
@@ -90,41 +101,25 @@ Kiểm tra Ollama sống: mở terminal khác chạy `ollama run qwen2.5:3b "Xin
 1. Tạo tài khoản miễn phí: https://cloudinary.com
 2. Vào **Dashboard** lấy 3 giá trị: `Cloud name`, `API Key`, `API Secret`.
 
-### Bước 5 — (Tùy chọn) Cấu hình SePay
+### Bước 5 — (Tùy chọn) Cấu hình SePay & Ngrok
 > Có thể bỏ qua nếu chỉ demo các phần khác. Cần khi test thanh toán thật.
 
-Luồng đúng là: **app local chạy ở `localhost:8080` → mở public tunnel → lấy URL public cấu hình vào SePay webhook**. SePay không gọi được trực tiếp vào `localhost`.
+> 📌 **GHI CHÚ QUAN TRỌNG:** 
+> Đường dẫn Webhook `https://overidle-daisy-disobligingly.ngrok-free.dev/api/payments/sepay/webhook` **ĐÃ ĐƯỢC CẤU HÌNH SẴN TRÊN HỆ THỐNG SEPAY**. 
+> Khi test thanh toán thật, bạn **KHÔNG CẦN** vào trang SePay cài đặt lại nữa, mà **chỉ cần mở Terminal gõ duy nhất 1 lệnh Ngrok** bên dưới để mở kết nối public tunnel là xong!
 
-1. Đăng ký https://my.sepay.vn, liên kết tài khoản ngân hàng nhận tiền.
-2. Đảm bảo tài khoản ngân hàng/API ngân hàng đã kết nối thành công trên SePay. Khi chuyển khoản test, giao dịch phải xuất hiện trong trang **Giao dịch** của SePay trước.
-3. Chạy backend Spring Boot trước:
+1. Chạy backend Spring Boot trước:
    ```bash
    mvn spring-boot:run
    ```
    Kiểm tra app mở được ở `http://localhost:8080`.
-4. Tạo public URL cho backend local bằng một trong hai cách:
+2. Mở Terminal khác chạy lệnh Ngrok (với tên miền cố định đã được đăng ký sẵn):
    ```bash
-   # Cách 1: localtunnel
-   npx localtunnel --port 8080
+   ngrok http --url=overidle-daisy-disobligingly.ngrok-free.dev 8080
+   ```
+3. **Xong!** Ngay khi bật lệnh Ngrok trên, người dùng quét mã VietQR chuyển khoản thật ➔ SePay sẽ tự động bắn dữ liệu qua đường dẫn đã cấu hình sẵn ➔ Đơn hàng tự động thành công (`PAID`) và học viên được mở khóa học ngay lập tức.
 
-   # Cách 2: ngrok
-   ngrok http 8080
-   ```
-   Ví dụ localtunnel trả về `https://calm-crabs-relax.loca.lt` thì webhook URL sẽ là:
-   ```text
-   https://calm-crabs-relax.loca.lt/api/payments/sepay/webhook
-   ```
-5. Vào **Tích hợp Webhooks → Thêm webhook**:
-   - **URL**: `https://<domain-public>/api/payments/sepay/webhook`
-   - **API Key**: đặt đúng chuỗi bí mật, ví dụ `sepay_key_hsf302_project_2026`
-   - Bật **Dùng để xác thực thanh toán**.
-   - Có thể bật **Chỉ gửi khi có mã thanh toán** nếu đã cấu hình nhận diện mã thanh toán đúng ở bước 6.
-6. Vào **Cấu hình công ty → Cấu hình chung → Nhận diện mã thanh toán**:
-   - Bật **Nhận diện mã thanh toán**.
-   - Tiền tố: `DH`
-   - Hậu tố: từ `1` đến `10` ký tự, kiểu **Số nguyên**.
-   - Lưu ý: app sinh mã dạng `DH7`, `DH15`, không phải `DH007`. Nếu đặt hậu tố tối thiểu 3 ký tự thì `DH7` sẽ không được nhận diện.
-7. Mỗi lần restart localtunnel/ngrok, public URL có thể đổi. Khi URL đổi phải cập nhật lại webhook URL trên SePay.
+> 💡 **Lưu ý dành cho Giảng viên / Người chấm bài:** Để chạy và test toàn bộ các tính năng chính của đồ án (Đăng ký, Đăng nhập, Học bài, Chat AI RAG, AI Tự sinh Quiz trắc nghiệm, Admin quản lý, Giỏ hàng, Chứng chỉ), **chỉ cần chạy PostgreSQL và Ollama**. Phần SePay Webhook / Ngrok chỉ cần thiết khi muốn demo quét QR chuyển khoản thật.
 
 ### Bước 6 — Tạo file cấu hình bí mật `application-local.properties`
 Tạo file **ở thư mục gốc dự án** (cùng cấp `pom.xml`). File này **đã được `.gitignore`** — không bị đẩy lên git.
@@ -132,19 +127,19 @@ Tạo file **ở thư mục gốc dự án** (cùng cấp `pom.xml`). File này 
 ```properties
 # ----- Cloudinary -----
 cloudinary.cloud-name=ten_cloud_cua_ban
-cloudinary.api-key=123456789
-cloudinary.api-secret=abcXyz_secret
+cloudinary.api-key=api_key_cua_ban
+cloudinary.api-secret=api_secret_cua_ban
 
 # ----- SePay (nếu dùng) -----
-sepay.webhook-api-key=sepay_key_hsf302_project_2026
-sepay.account-number=0968097907
-sepay.account-name=NGO HOANG TRUONG DAT
+sepay.webhook-api-key=key_webhook_sepay_cua_ban
+sepay.account-number=so_tai_khoan_ngan_hang
+sepay.account-name=TEN_CHU_TAI_KHOAN
 sepay.bank=MBBank
 sepay.prefix=DH
 
 # ----- PostgreSQL (sửa nếu khác mặc định) -----
 spring.datasource.username=postgres
-spring.datasource.password=12345
+spring.datasource.password=mat_khau_postgres_cua_ban
 ```
 > App tự nạp file này qua `spring.config.import=optional:file:./application-local.properties` và **ghi đè** các giá trị trong `application.properties`.
 
@@ -167,7 +162,7 @@ Mở trình duyệt: **http://localhost:8080**
 | Admin | `admin@fpt.edu.vn` | `123456` |
 | Học viên | `student@fpt.edu.vn` | `123456` |
 
-Dữ liệu mẫu: 2 khóa học (Spring Boot, Figma), mã giảm giá **`WELCOME10`** (giảm 10%).
+Dữ liệu mẫu: 3 khóa học (Spring Boot, Thiết kế UI Bootstrap & Thymeleaf, Kỹ năng học online), mã giảm giá **`WELCOME10`** (giảm 10%).
 
 ---
 

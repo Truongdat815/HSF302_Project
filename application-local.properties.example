@@ -1,0 +1,24 @@
+# ===================================================================
+# FILE MAU CAU HINH LOCAL (application-local.properties.example)
+# De su dung: Tao file application-local.properties va copy noi dung duoi day vao.
+# ===================================================================
+
+# ----- 1. PostgreSQL Database -----
+spring.datasource.username=postgres
+spring.datasource.password=your_postgres_password
+
+# ----- 2. SePay Config -----
+sepay.webhook-api-key=your_sepay_webhook_key
+sepay.account-number=your_account_number
+sepay.account-name=YOUR_ACCOUNT_NAME
+sepay.bank=MBBank
+sepay.prefix=DH
+
+# ----- 3. Cloudinary Config -----
+cloudinary.cloud-name=your_cloud_name
+cloudinary.api-key=your_api_key
+cloudinary.api-secret=your_api_secret
+
+# ----- 4. Ollama AI Config -----
+ollama.url=http://localhost:11434
+ollama.model=qwen2.5:3b
